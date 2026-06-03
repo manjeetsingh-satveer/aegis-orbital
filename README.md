@@ -8,7 +8,7 @@
 AEGIS is a satellite cyber threat intelligence platform that does two things:
 
 **1. Tracks real satellites in real-time**
-Pulls live TLE (Two-Line Element) data from CelesTrak — the same source used by NASA, ESA, and the US Space Force — and computes orbital positions using the **SGP4 algorithm**, the same math NORAD uses to track every object in orbit. Positions are accurate to within ~1 km when live data loads.
+Pulls live TLE (Two-Line Element) data from CelesTrak the same source used by NASA, ESA, and the US Space Force and computes orbital positions using the **SGP4 algorithm**, the same math NORAD uses to track every object in orbit. Positions are accurate to within ~1 km when live data loads.
 
 **2. Simulates real satellite attack vectors with AI detection**
 Runs an Isolation Forest anomaly detection engine on 5 telemetry features (SNR, command rate, position delta, signal strength, packet loss) to detect the attack signatures used against real satellites.
@@ -19,10 +19,10 @@ Runs an Isolation Forest anomaly detection engine on 5 telemetry features (SNR, 
 
 ### 🌍 Live Orbital Globe
 - 170+ real satellites tracked: SpaceX Starlink, ISS, Tiangong, USAF GPS Block II/III, NOAA/GOES/Landsat/Terra/Aqua
-- SGP4/SDP4 orbital propagation — same algorithm as NORAD & US Space Force
-- Photorealistic Earth — ocean gradients, biome colors, ice caps, cloud bands, city lights on the night side
+- SGP4/SDP4 orbital propagation same algorithm as NORAD & US Space Force
+- Photorealistic Earth ocean gradients, biome colors, ice caps, cloud bands, city lights on the night side
 - Drag to rotate · Scroll to zoom · Click any satellite for live telemetry
-- Smart labels — ISS, GPS, weather sats labeled by default. Toggle ALL / SMART / OFF
+- Smart labels ISS, GPS, weather sats labeled by default. Toggle ALL / SMART / OFF
 
 ### 🛡️ AI Anomaly Detection
 
@@ -121,7 +121,7 @@ Satellite cybersecurity is critically under-resourced:
 
 - **No open-source IDS** existed for satellite networks before AEGIS
 - **No shared threat framework** — the Sat-ATT&CK matrix (IEEE AICCSA 2025) was the first MITRE ATT&CK equivalent for space, and it was purely theoretical with no working implementation
-- **The Viasat attack** (2022) demonstrated that satellite ground infrastructure is vulnerable to the same attacks that hit enterprise networks — phishing, credential theft, command injection — yet the tooling to detect them doesn't exist at the open-source level
+- **The Viasat attack** (2022) demonstrated that satellite ground infrastructure is vulnerable to the same attacks that hit enterprise networks phishing, credential theft, command injection yet the tooling to detect them doesn't exist at the open-source level
 - **The space economy** is projected to reach $1.8 trillion by 2035, with thousands of new satellites launching every year, making this an increasingly critical security domain
 
 ---
@@ -145,12 +145,6 @@ BS Computer Network System Management · Minor in Business
 San Jose State University
 
 🌐 [manjeet-singh.com](https://www.manjeet-singh.com)
-🏆 UC Berkeley 13 Hacks — 2nd Place (Manshaan AI)
-🏆 SJSU Cloudathon 2026 CTF — Team ZeroDaySpartans (#10/20)
-
-Certifications: Google Cybersecurity Professional · CCST
-Pursuing: CCNA
-
 ---
 
 ## License
