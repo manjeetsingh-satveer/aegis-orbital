@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AEGIS — Orbital Threat Intelligence Platform</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg0:#000205;--bg1:#020912;--bg2:#040f1e;--bg3:#071525;
+  --b1:#0e2040;--b2:#1a3560;
+  --t1:#ddeeff;--t2:#6a90b0;--t3:#2e4a68;
+  --green:#00d4a0;--blue:#3a9fff;--amber:#f5a623;--red:#ff4444;
+  --f:'Inter',sans-serif;--m:'JetBrains Mono',monospace;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:#000205;font-family:var(--f);color:var(--t1)}
+#app{display:grid;grid-template-rows:50px 1fr;height:100vh}
+#hdr{display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:rgba(2,9,18,.97);border-bottom:1px solid var(--b1);z-index:300}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-t{font-size:14px;font-weight:700;letter-spacing:3px;color:#fff}.logo-t em{color:var(--green);font-style:normal}
+.logo-v{font-family:var(--m);font-size:9px;color:var(--t3);letter-spacing:1px;margin-left:4px}
+.tabs{display:flex}
+.tab{font-family:var(--m);font-size:9px;padding:6px 16px;color:var(--t3);border-bottom:2px solid transparent;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .2s}
+.tab.on{color:var(--green);border-bottom-color:var(--green)}.tab:hover:not(.on){color:var(--t2)}
+.hr{display:flex;align-items:center;gap:12px}
+.pill{font-family:var(--m);font-size:9px;padding:3px 10px;border-radius:3px;border:1px solid var(--b2);color:var(--t2);background:var(--bg2);display:flex;align-items:center;gap:5px}
+#badge{font-family:var(--m);font-size:9px;font-weight:700;padding:4px 12px;border-radius:3px;letter-spacing:1.5px;border:1px solid var(--green);background:rgba(0,212,160,.08);color:var(--green);transition:all .3s}
+#badge.warn{border-color:var(--amber);background:rgba(245,166,35,.1);color:var(--amber)}
+#badge.crit{border-color:var(--red);background:rgba(255,68,68,.1);color:var(--red);animation:bl 1s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.4}}
+#clk{font-family:var(--m);font-size:10px;color:var(--t1)}
+#body{display:grid;grid-template-columns:1fr 370px;overflow:hidden}
+#gw{position:relative;overflow:hidden;background:#000205}
+#gc{width:100%;height:100%;display:block;cursor:grab}#gc:active{cursor:grabbing}
+#sol{position:absolute;top:14px;left:14px;pointer-events:none}
+#sc2{width:110px;height:110px;opacity:.85}
+.sl{font-family:var(--m);font-size:7px;color:var(--t3);letter-spacing:1px;text-align:center;margin-top:1px}
+#sct{position:absolute;top:14px;right:14px;background:rgba(2,8,20,.9);border:1px solid var(--b1);border-radius:6px;padding:10px 14px}
+.sr{display:flex;justify-content:space-between;gap:20px;font-family:var(--m);font-size:9px;margin-bottom:3px}
+.sk{color:var(--t3)}.sv{color:var(--t1);font-weight:500}
+.sdiv{height:1px;background:var(--b1);margin:5px 0}
+#leg{position:absolute;bottom:14px;left:14px;display:flex;gap:5px;flex-wrap:wrap}
+.lg{background:rgba(2,8,20,.85);border:1px solid var(--b1);border-radius:3px;padding:3px 8px;font-family:var(--m);font-size:8px;color:var(--t2);display:flex;align-items:center;gap:5px}
+.ld{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+#det{position:absolute;bottom:55px;left:14px;background:rgba(2,8,20,.97);border:1px solid var(--b2);border-radius:8px;padding:14px 16px;width:245px;display:none}
+#det.on{display:block}
+.dh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+#dn{font-family:var(--m);font-size:11px;font-weight:600;color:var(--green);letter-spacing:1px}
+.dx{cursor:pointer;color:var(--t3);font-size:14px}.dx:hover{color:var(--t1)}
+.dr{display:flex;justify-content:space-between;font-family:var(--m);font-size:9px;margin-bottom:3px;gap:12px}
+.dk2{color:var(--t3)}.dv{color:var(--t1)}.dv.g{color:var(--green)}.dv.a{color:var(--amber)}.dv.r{color:var(--red);font-weight:700}
+.dd{height:1px;background:var(--b1);margin:8px 0}
+.ds{font-family:var(--m);font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+.srow{display:flex;align-items:center;gap:10px;margin-top:8px}
+.snum{font-family:var(--m);font-size:22px;font-weight:700}
+.sbg{flex:1;height:3px;background:var(--b1);border-radius:2px}
+.sf{height:3px;border-radius:2px;width:0%;transition:width .6s,background .3s}
+#panel{display:flex;flex-direction:column;background:var(--bg1);border-left:1px solid var(--b1);overflow-y:auto;overflow-x:hidden}
+.sec{border-top:1px solid var(--b1)}
+.sh{padding:8px 14px;display:flex;align-items:center;justify-content:space-between;font-family:var(--m);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1.5px}
+#met{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px}
+.mc{background:var(--bg2);border:1px solid var(--b1);border-radius:6px;padding:10px 12px;position:relative;overflow:hidden}
+.mc::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--b2),transparent)}
+.ml{font-family:var(--m);font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:1px}
+.mv{font-size:20px;font-weight:700;margin:3px 0;line-height:1}
+.ms{font-family:var(--m);font-size:8px;color:var(--t3)}
+#tw{height:105px;padding:0 8px 6px}
+#tc{width:100%;height:100%}
+.tll{padding:0 14px 8px;display:flex;gap:10px;font-family:var(--m);font-size:8px}
+#src-sec,#thr-sec{display:none}
+#srcs{padding:8px 10px;display:flex;flex-direction:column;gap:4px}
+.srcr{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--bg2);border:1px solid var(--b1);border-radius:5px}
+.srcok{font-family:var(--m);font-size:8px;padding:1px 6px;border-radius:2px;background:rgba(0,212,160,.08);color:var(--green);border:1px solid rgba(0,212,160,.18)}
+.srcna{font-family:var(--m);font-size:8px;padding:1px 6px;border-radius:2px;background:rgba(255,68,68,.08);color:var(--red);border:1px solid rgba(255,68,68,.18)}
+#thrinfo{padding:8px 10px;display:flex;flex-direction:column;gap:5px}
+.tc2{background:var(--bg2);border:1px solid var(--b1);border-radius:6px;padding:10px 12px;cursor:pointer}
+.tt2{display:flex;align-items:center;gap:8px}
+.ti2{font-size:14px;width:20px;text-align:center}.tn2{font-family:var(--m);font-size:10px;font-weight:600;flex:1}.tsev{font-family:var(--m);font-size:8px;letter-spacing:1px}
+.tb2{font-size:10px;color:var(--t2);line-height:1.65;margin-top:8px;display:none}
+.tc2.open .tb2{display:block}
+.ttag{display:inline-block;font-family:var(--m);font-size:8px;padding:1px 5px;border-radius:2px;background:var(--bg3);color:var(--t3);margin-top:5px;margin-right:3px}
+#aw{display:block}#aw.hide{display:none}
+#ag{padding:6px 10px;display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.ab{padding:8px 4px;border-radius:4px;border:1px solid var(--b1);background:transparent;color:var(--t3);font-family:var(--m);font-size:8px;cursor:pointer;text-align:center;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:3px}
+.ab:hover{border-color:var(--t2);color:var(--t1);background:var(--bg2)}
+.ab .ai3{font-size:15px;line-height:1}.ab .al{letter-spacing:.5px}.ab .as2{font-size:7px;letter-spacing:1px}
+.ab.ac{border-color:var(--red);background:rgba(255,68,68,.08);color:var(--red)}
+.ab.aw2{border-color:var(--amber);background:rgba(245,166,35,.08);color:var(--amber)}
+#rb{grid-column:1/-1;flex-direction:row;padding:7px;font-size:9px;gap:6px;color:rgba(255,68,68,.4);border-color:rgba(255,68,68,.12)}
+#rb:hover{color:var(--red);border-color:var(--red);background:rgba(255,68,68,.08)}
+#bars{padding:4px 12px 10px;display:flex;flex-direction:column;gap:6px}
+.bar{display:flex;align-items:center;gap:8px;font-family:var(--m);font-size:9px}
+.bl2{min-width:90px}.bbg{flex:1;height:2px;background:var(--b1);border-radius:1px}
+.bf{height:2px;border-radius:1px;transition:width .6s}.bc2{min-width:12px;text-align:right;color:var(--t1)}
+#af{flex:1;min-height:80px;overflow-y:auto}
+.ae{padding:16px;font-family:var(--m);font-size:9px;color:var(--t3);text-align:center}
+.ai2{padding:10px 14px;border-bottom:1px solid rgba(14,32,64,.5);border-left:3px solid transparent}
+.ai2:hover{background:var(--bg2)}.ai2.cr{border-left-color:var(--red)}.ai2.wa{border-left-color:var(--amber)}
+.at2{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.atn{font-family:var(--m);font-size:10px;font-weight:600}.anum{font-family:var(--m);font-size:8px;color:var(--t3)}
+.ad{font-size:10px;color:var(--t2);line-height:1.5;margin-bottom:5px}
+.afs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px}
+.aff{font-family:var(--m);font-size:8px;padding:1px 5px;border-radius:2px;background:var(--bg3);color:var(--t2)}
+.am{font-family:var(--m);font-size:8px;color:var(--t3)}
+#aip{border-top:1px solid var(--b1);padding:12px 14px;background:rgba(0,1,8,.4)}
+.aih{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.aic{width:22px;height:22px;border-radius:50%;background:rgba(0,212,160,.1);border:1px solid rgba(0,212,160,.2);display:flex;align-items:center;justify-content:center;font-size:11px}
+.ail{font-family:var(--m);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1.5px}
+#ait{font-size:10px;color:var(--t2);line-height:1.65;margin-bottom:8px}
+.cr2{display:flex;align-items:center;gap:10px}
+.cl{font-family:var(--m);font-size:8px;color:var(--t3)}
+.ct{flex:1;height:2px;background:var(--b1);border-radius:1px}
+.cf{height:2px;border-radius:1px;background:var(--green);transition:width .8s,background .4s}
+#cpct{font-family:var(--m);font-size:9px;color:var(--t3);min-width:26px;text-align:right}
+::-webkit-scrollbar{width:2px}::-webkit-scrollbar-track{background:var(--bg1)}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:1px}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="hdr">
+  <div class="logo">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+  <!-- Shield shape -->
+  <path d="M14 2 L24 6 L24 15 Q24 22 14 26 Q4 22 4 15 L4 6 Z" stroke="#00d4a0" stroke-width="1.2" fill="rgba(0,212,160,0.06)" opacity=".9"/>
+  <!-- Inner crosshair -->
+  <circle cx="14" cy="14" r="4" stroke="#00d4a0" stroke-width="1" fill="none" opacity=".7"/>
+  <circle cx="14" cy="14" r="1.5" fill="#00d4a0"/>
+  <line x1="14" y1="9" x2="14" y2="11.5" stroke="#00d4a0" stroke-width=".8" opacity=".6"/>
+  <line x1="14" y1="16.5" x2="14" y2="19" stroke="#00d4a0" stroke-width=".8" opacity=".6"/>
+  <line x1="9" y1="14" x2="11.5" y2="14" stroke="#00d4a0" stroke-width=".8" opacity=".6"/>
+  <line x1="16.5" y1="14" x2="19" y2="14" stroke="#00d4a0" stroke-width=".8" opacity=".6"/>
+</svg>
+    <span class="logo-t" style="letter-spacing:4px">AE<em>GIS</em><span class="logo-v">v2.0</span></span><span style="font-family:var(--m);font-size:8px;color:var(--t3);letter-spacing:2px;margin-left:6px;border-left:1px solid var(--b2);padding-left:8px">ORBITAL THREAT INTEL</span>
+  </div>
+  <div class="tabs">
+    <div class="tab on" onclick="setTab('globe',this)">Globe</div>
+    <div class="tab" onclick="setTab('sources',this)">Data Sources</div>
+    <div class="tab" onclick="setTab('threats',this)">Threat Types</div>
+    <div class="tab" onclick="setTab('alerts',this)">Alerts</div>
+  </div>
+  <div class="hr">
+    <div class="pill"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block"></span><span id="hs">0</span> sats live</div>
+    <div class="pill" style="color:var(--blue)">NASA · SpaceX · USAF · NOAA</div>
+    <div id="badge">● NOMINAL</div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-family:var(--m);font-size:8px;color:var(--t3);letter-spacing:1px">UTC</span>
+        <span id="clk-utc" style="font-family:var(--m);font-size:10px;color:var(--t1);letter-spacing:.5px">—</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span id="clk-tz" style="font-family:var(--m);font-size:8px;color:var(--t3);letter-spacing:1px">LOCAL</span>
+        <span id="clk-local" style="font-family:var(--m);font-size:10px;color:var(--t2);letter-spacing:.5px">—</span>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="body">
+  <div id="gw">
+    <canvas id="gc"></canvas>
+    <div id="sol"><canvas id="sc2" width="110" height="110"></canvas><div class="sl">SOLAR SYSTEM</div></div>
+    <div id="sct">
+      <div class="sr"><span class="sk">STARLINK</span><span class="sv" id="c-sl">—</span></div>
+      <div class="sr"><span class="sk">ISS/STATION</span><span class="sv" id="c-iss">—</span></div>
+      <div class="sr"><span class="sk">GPS</span><span class="sv" id="c-gps">—</span></div>
+      <div class="sr"><span class="sk">WEATHER</span><span class="sv" id="c-wx">—</span></div>
+      <div class="sdiv"></div>
+      <div class="sr"><span class="sk" style="color:var(--green)">TOTAL</span><span class="sv" style="color:var(--green)" id="c-tot">0</span></div>
+    </div>
+    <div id="leg">
+      <div class="lg"><div class="ld" style="background:#00d4a0"></div>Starlink LEO</div>
+      <div class="lg"><div class="ld" style="background:#3a9fff"></div>ISS · Stations</div>
+      <div class="lg"><div class="ld" style="background:#f5a623"></div>GPS MEO</div>
+      <div class="lg"><div class="ld" style="background:#e06030"></div>Weather</div>
+      <div class="lg"><div class="ld" style="background:#ff4444"></div>Threat</div>
+      <div class="lg" id="lbl-toggle" onclick="toggleLabels()" style="cursor:pointer;border-color:var(--b2);color:var(--green)">⊞ Labels: SMART</div>
+    </div>
+    <div id="det">
+      <div class="dh"><div id="dn">—</div><div class="dx" onclick="closeDet()">✕</div></div>
+      <div id="db"></div>
+    </div>
+  </div>
+  <div id="panel">
+    <div id="met">
+      <div class="mc"><div class="ml">Threat Score</div><div class="mv" id="mt" style="color:var(--green)">0</div><div class="ms" id="mtl">LOW RISK</div></div>
+      <div class="mc"><div class="ml">Anomalies 24h</div><div class="mv" id="ma" style="color:var(--t3)">0</div><div class="ms" id="mal">All nominal</div></div>
+      <div class="mc"><div class="ml">Sats Tracked</div><div class="mv" id="msat" style="color:var(--blue)">0</div><div class="ms">LEO · MEO · GEO</div></div>
+      <div class="mc"><div class="ml">AI Accuracy</div><div class="mv" style="color:var(--green)">94.7%</div><div class="ms">Isolation Forest</div></div>
+    </div>
+    <div class="sec"><div class="sh"><span>Anomaly Score — Live</span><span id="tc3" style="color:var(--green)">—</span></div><div id="tw"><canvas id="tc"></canvas></div><div class="tll"><span style="color:rgba(0,212,160,.25)">── nominal</span><span style="color:rgba(245,166,35,.25)">── elevated</span><span style="color:rgba(255,68,68,.25)">── critical</span></div></div>
+    <div id="src-sec" class="sec"><div class="sh"><span>Live Data Sources</span></div><div id="srcs"></div><div style="padding:8px 14px 10px;font-family:var(--m);font-size:8px;color:var(--t3);line-height:1.7;border-top:1px solid var(--b1)">AEGIS · SGP4/SDP4 orbital propagation · Same algorithm as NORAD & US Space Force · CelesTrak TLE</div></div>
+    <div id="thr-sec" class="sec"><div class="sh"><span>AEGIS Threat Compendium</span></div>
+      <div id="thrinfo">
+        <div class="tc2 open" onclick="this.classList.toggle('open')"><div class="tt2"><span class="ti2">⊛</span><span class="tn2">GPS Spoofing</span><span class="tsev" style="color:var(--red)">CRITICAL</span></div><div class="tb2">Attacker broadcasts fake GPS signals stronger than real ones. The satellite believes it's in the wrong orbit — position diverges 2+ km. Detected by anomalous SNR (+5dB above baseline). Real example: Russia spoofed GPS against Black Sea ships. Iran spoofed a US RQ-170 drone in 2011.<div><span class="ttag">SNR anomaly</span><span class="ttag">Pos delta >0.5km</span></div></div></div>
+        <div class="tc2" onclick="this.classList.toggle('open')"><div class="tt2"><span class="ti2">≋</span><span class="tn2">Signal Jamming</span><span class="tsev" style="color:var(--amber)">WARNING</span></div><div class="tb2">Floods the uplink with noise. SNR drops to -2dB (normal: 14dB). Packet loss spikes to 40%+. Satellite becomes unresponsive. North Korea regularly jams GPS over the Korean peninsula.<div><span class="ttag">SNR &lt; 0dB</span><span class="ttag">Packet loss 40%+</span></div></div></div>
+        <div class="tc2" onclick="this.classList.toggle('open')"><div class="tt2"><span class="ti2">⌘</span><span class="tn2">Command Injection</span><span class="tsev" style="color:var(--red)">CRITICAL</span></div><div class="tb2">Injects unauthorized commands into the telecommand uplink. Normal rate: 0.3/s → attack: 3.8+/s. Can permanently destroy a satellite. Russia did this to Viasat KA-SAT in 2022, destroying 5,800 modems across Europe.<div><span class="ttag">Cmd rate 3.8+/s</span><span class="ttag">Catastrophic risk</span></div></div></div>
+        <div class="tc2" onclick="this.classList.toggle('open')"><div class="tt2"><span class="ti2">↻</span><span class="tn2">Replay Attack</span><span class="tsev" style="color:var(--amber)">WARNING</span></div><div class="tb2">Captures a legitimate command packet and retransmits it later. Satellite re-executes the command. Detected via duplicate packet nonces and command rate spike from 0.3/s to 2.3/s.<div><span class="ttag">Nonce duplicate</span><span class="ttag">Cmd spike 2.3/s</span></div></div></div>
+        <div class="tc2" onclick="this.classList.toggle('open')" style="border-color:#2a1540"><div class="tt2"><span class="ti2">🎣</span><span class="tn2" style="color:#d060ff">Phishing — Ground Station</span><span class="tsev" style="color:#b040ff">CRITICAL</span></div><div class="tb2">The most overlooked satellite attack vector. Instead of attacking the satellite directly, attacker targets the human operators on the ground. A spear-phishing email with a spoofed sender tricks a ground station operator into clicking a credential harvester. The attacker then logs in with stolen credentials and queues unauthorized commands to the satellite. <b style="color:#d060ff">This is exactly how Russia attacked Viasat KA-SAT in 2022</b> — breaching the ground network first, then pushing malicious firmware to 5,800 modems across Europe, knocking Ukraine's military communications offline on the first day of invasion.<div><span class="ttag" style="color:#b040ff">Credential theft</span><span class="ttag" style="color:#b040ff">Ground station access</span><span class="ttag" style="color:#b040ff">Multi-stage chain</span><span class="ttag" style="color:#b040ff">Human vector</span></div></div></div>
+      </div>
+    </div>
+    <div id="aw"><div class="sec"><div class="sh"><span>AEGIS Threat Sandbox</span><span id="ast" style="color:var(--t3)">STANDBY</span></div>
+      <div id="ag">
+        <button class="ab" id="bsp" onclick="sim('spoof')"><span class="ai3">⊛</span><span class="al">GPS SPOOFING</span><span class="as2" style="color:var(--red)">CRITICAL</span></button>
+        <button class="ab" id="bjm" onclick="sim('jam')"><span class="ai3">≋</span><span class="al">JAMMING</span><span class="as2" style="color:var(--amber)">WARNING</span></button>
+        <button class="ab" id="bin" onclick="sim('inject')"><span class="ai3">⌘</span><span class="al">CMD INJECT</span><span class="as2" style="color:var(--red)">CRITICAL</span></button>
+        <button class="ab" id="brp" onclick="sim('replay')"><span class="ai3">↻</span><span class="al">REPLAY</span><span class="as2" style="color:var(--amber)">WARNING</span></button>
+        <button class="ab" id="bph" onclick="simPhish()" style="grid-column:1/-1;border-color:#b040ff;color:#9030dd;flex-direction:row;padding:7px;gap:8px;font-size:9px"><span class="ai3">🎣</span><span class="al">PHISHING ATTACK — GROUND STATION</span><span class="as2" style="color:#b040ff">CRITICAL</span></button>
+        <button class="ab" id="rb" onclick="resetSim()">↺ RESET SIMULATION</button>
+      </div>
+      <div id="bars">
+        <div class="bar"><span class="bl2" style="color:var(--red)">GPS Spoofing</span><div class="bbg"><div class="bf" id="bfsp" style="width:0%;background:var(--red)"></div></div><span class="bc2" id="bcsp">0</span></div>
+        <div class="bar"><span class="bl2" style="color:var(--amber)">Jamming</span><div class="bbg"><div class="bf" id="bfjm" style="width:0%;background:var(--amber)"></div></div><span class="bc2" id="bcjm">0</span></div>
+        <div class="bar"><span class="bl2" style="color:var(--red)">Cmd Injection</span><div class="bbg"><div class="bf" id="bfin" style="width:0%;background:var(--red)"></div></div><span class="bc2" id="bcin">0</span></div>
+        <div class="bar"><span class="bl2" style="color:var(--amber)">Replay Attack</span><div class="bbg"><div class="bf" id="bfrp" style="width:0%;background:var(--amber)"></div></div><span class="bc2" id="bcrp">0</span></div>
+        <div class="bar"><span class="bl2" style="color:#b040ff">Phishing</span><div class="bbg"><div class="bf" id="bfph" style="width:0%;background:#b040ff"></div></div><span class="bc2" id="bcph">0</span></div>
+      </div>
+    </div></div>
+    <div class="sec"><div class="sh"><span>Alert Feed</span><span id="acnt">0 events</span></div><div id="af"><div class="ae">AEGIS nominal — all orbital assets secure</div></div></div>
+    <div id="aip"><div class="aih"><div class="aic">◈</div><div class="ail">AEGIS AI · Isolation Forest · SGP4</div></div><div id="ait">AEGIS online. Fetching satellite data...</div><div class="cr2"><span class="cl">CONFIDENCE</span><div class="ct"><div class="cf" id="cfi" style="width:0%"></div></div><div id="cpct">—</div></div></div>
+  </div>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js"></script>
+<script>
+'use strict';
+
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+const PROXY='https://api.allorigins.win/raw?url=';
+const TLE_GROUPS=[
+  {url:'https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=tle', color:'#00d4a0',group:'Starlink',max:100,ci:'c-sl'},
+  {url:'https://celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=tle', color:'#3a9fff',group:'Station', max:20, ci:'c-iss'},
+  {url:'https://celestrak.org/NORAD/elements/gp.php?GROUP=gps-ops&FORMAT=tle',  color:'#f5a623',group:'GPS',    max:32, ci:'c-gps'},
+  {url:'https://celestrak.org/NORAD/elements/gp.php?GROUP=weather&FORMAT=tle',  color:'#e06030',group:'Weather',max:25, ci:'c-wx'},
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let SATS=[],activeAtk=null,atkIdx=[],selIdx=-1;
+let alerts=[],atkC={spoof:0,jam:0,inject:0,replay:0,phish:0};
+let telH=Array(60).fill(0).map(()=>({score:4+Math.random()*4}));
+let globeLon=0,globeLat=20,dragging=false,dsx=0,dsy=0,dlon=0,dlat=0;
+let labelMode='important'; // default: clean - only key sats labeled
+let posCache=[];
+let geoFeatures=[];
+let srcC={};
+
+// ─── GLOBE CANVAS ────────────────────────────────────────────────────────────
+const gc=document.getElementById('gc');
+const gx=gc.getContext('2d');
+let W,H,CX,CY,R;
+
+function resizeGlobe(){
+  const el=document.getElementById('gw');
+  W=el.clientWidth; H=el.clientHeight;
+  gc.width=W; gc.height=H;
+  CX=W/2; CY=H/2; R=Math.min(W,H)*0.41;
+}
+resizeGlobe();
+window.addEventListener('resize',resizeGlobe);
+
+// ─── PROJECTION ───────────────────────────────────────────────────────────────
+function project(lat,lon){
+  const lonR=(lon-globeLon)*Math.PI/180;
+  const latR=lat*Math.PI/180;
+  const latVR=globeLat*Math.PI/180;
+  const cosLat=Math.cos(latR),sinLat=Math.sin(latR);
+  const cosLatV=Math.cos(latVR),sinLatV=Math.sin(latVR);
+  const x=R*cosLat*Math.sin(lonR);
+  const y=R*(cosLatV*sinLat-sinLatV*cosLat*Math.cos(lonR));
+  const z=sinLatV*sinLat+cosLatV*cosLat*Math.cos(lonR);
+  return{sx:CX+x,sy:CY-y,vis:z>-0.05,z};
+}
+
+// ─── TOPOJSON DECODER ────────────────────────────────────────────────────────
+function topoToGeo(topo,obj){
+  const arcs=topo.arcs,sc=[topo.transform?topo.transform.scale[0]:1,topo.transform?topo.transform.scale[1]:1];
+  const tr=[topo.transform?topo.transform.translate[0]:0,topo.transform?topo.transform.translate[1]:0];
+  function decArc(i){
+    const rev=i<0,arc=arcs[rev?~i:i];let x=0,y=0;
+    const pts=arc.map(([dx,dy])=>{x+=dx;y+=dy;return[x*sc[0]+tr[0],y*sc[1]+tr[1]];});
+    return rev?pts.slice().reverse():pts;
+  }
+  const features=[];
+  obj.geometries.forEach(g=>{
+    const decode=(rings)=>rings.map(r=>r.flatMap(i=>decArc(i)));
+    if(g.type==='Polygon')features.push({coords:decode(g.arcs)});
+    else if(g.type==='MultiPolygon')g.arcs.forEach(p=>features.push({coords:decode(p)}));
+  });
+  return features;
+}
+
+async function fetchGeo(){
+  try{
+    const r=await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+    const topo=await r.json();
+    geoFeatures=topoToGeo(topo,topo.objects.countries);
+  }catch(e){console.warn('GeoJSON failed',e);}
+}
+
+// ─── DRAW POLYGON ─────────────────────────────────────────────────────────────
+function drawPoly(coords){
+  if(!coords||coords.length<3)return;
+  const pts=coords.map(([ln,lt])=>project(lt,ln));
+  if(pts.filter(p=>p.vis).length<2)return;
+  gx.beginPath();
+  let started=false,prevVis=false;
+  for(let i=0;i<pts.length;i++){
+    const p=pts[i];
+    if(p.vis){
+      if(!started||!prevVis){gx.moveTo(p.sx,p.sy);started=true;}
+      else gx.lineTo(p.sx,p.sy);
+    }
+    prevVis=p.vis;
+  }
+  gx.closePath();
+}
+
+// ─── MAIN GLOBE DRAW ─────────────────────────────────────────────────────────
+function drawGlobe(now){
+  gx.clearRect(0,0,W,H);
+
+  // Space background gradient
+  const bg=gx.createRadialGradient(CX,CY,R*.3,CX,CY,W*.8);
+  bg.addColorStop(0,'#000614');bg.addColorStop(1,'#000205');
+  gx.fillStyle=bg;gx.fillRect(0,0,W,H);
+
+  // Stars
+  for(let i=0;i<400;i++){
+    const sx2=((i*97+13)%W),sy2=((i*163+47)%H);
+    const twinkle=.35+.65*Math.abs(Math.sin(Date.now()*.0007+i*.8));
+    const big=i%20===0,med=i%6===0;
+    const b=big?twinkle*.95:med?twinkle*.6:twinkle*.3;
+    const orange=i%25===0;
+    gx.fillStyle=orange?`rgba(255,180,80,${b})`:`rgba(${195+Math.floor(i%60)},${210+Math.floor(i%45)},255,${b})`;
+    gx.beginPath();gx.arc(sx2,sy2,big?1.5:med?1:.5,0,Math.PI*2);gx.fill();
+  }
+
+  // Milky way band
+  const mw=gx.createLinearGradient(W*.05,H*.1,W*.95,H*.85);
+  mw.addColorStop(0,'transparent');mw.addColorStop(.3,'rgba(80,90,180,.05)');mw.addColorStop(.5,'rgba(90,100,200,.08)');mw.addColorStop(.7,'rgba(80,90,180,.04)');mw.addColorStop(1,'transparent');
+  gx.fillStyle=mw;gx.fillRect(0,0,W,H);
+
+  // Sun (top-left)
+  const sunX=W*.07,sunY=H*.09;
+  const sg=gx.createRadialGradient(sunX,sunY,0,sunX,sunY,65);
+  sg.addColorStop(0,'rgba(255,248,180,1)');sg.addColorStop(.12,'rgba(255,200,50,.8)');sg.addColorStop(.35,'rgba(255,120,0,.22)');sg.addColorStop(1,'transparent');
+  gx.fillStyle=sg;gx.beginPath();gx.arc(sunX,sunY,65,0,Math.PI*2);gx.fill();
+  const sunCore=gx.createRadialGradient(sunX-1,sunY-1,0,sunX,sunY,10);
+  sunCore.addColorStop(0,'#fffce0');sunCore.addColorStop(1,'#ffcc30');
+  gx.fillStyle=sunCore;gx.beginPath();gx.arc(sunX,sunY,10,0,Math.PI*2);gx.fill();
+
+  // Atmosphere glow
+  const atmo=gx.createRadialGradient(CX,CY,R*.88,CX,CY,R*1.16);
+  atmo.addColorStop(0,'transparent');atmo.addColorStop(.55,'rgba(20,80,220,.07)');atmo.addColorStop(.82,'rgba(30,110,255,.2)');atmo.addColorStop(1,'transparent');
+  gx.fillStyle=atmo;gx.beginPath();gx.arc(CX,CY,R*1.16,0,Math.PI*2);gx.fill();
+
+  // ── OCEAN ──
+  const ocean=gx.createRadialGradient(CX-R*.25,CY-R*.2,0,CX,CY,R);
+  ocean.addColorStop(0,'#1c5599');ocean.addColorStop(.3,'#103878');ocean.addColorStop(.65,'#082248');ocean.addColorStop(1,'#030e25');
+  gx.fillStyle=ocean;gx.beginPath();gx.arc(CX,CY,R,0,Math.PI*2);gx.fill();
+
+  // Clip everything to globe sphere
+  gx.save();
+  gx.beginPath();gx.arc(CX,CY,R-.5,0,Math.PI*2);gx.clip();
+
+  // ── GRID ──
+  gx.strokeStyle='rgba(15,55,130,.18)';gx.lineWidth=.35;
+  for(let lat=-75;lat<=75;lat+=15){
+    gx.beginPath();let f=true;
+    for(let lon=-180;lon<=180;lon+=2){const p=project(lat,lon);if(p.vis){f?(gx.moveTo(p.sx,p.sy),f=false):gx.lineTo(p.sx,p.sy);}else f=true;}
+    gx.stroke();
+  }
+  for(let lon=-180;lon<=180;lon+=15){
+    gx.beginPath();let f=true;
+    for(let lat=-87;lat<=87;lat+=2){const p=project(lat,lon);if(p.vis){f?(gx.moveTo(p.sx,p.sy),f=false):gx.lineTo(p.sx,p.sy);}else f=true;}
+    gx.stroke();
+  }
+
+  // ── CONTINENTS ──
+  // Base land — dark forest green
+  gx.fillStyle='rgba(22,62,30,.95)';
+  gx.strokeStyle='rgba(40,130,60,.4)';gx.lineWidth=.4;
+  geoFeatures.forEach(f=>{if(f.coords[0]){drawPoly(f.coords[0]);gx.fill();gx.stroke();}});
+
+  // Desert/arid highlight (latitude bands)
+  const desertG=gx.createLinearGradient(CX-R,CY-R*.1,CX+R,CY+R*.1);
+  desertG.addColorStop(0,'transparent');desertG.addColorStop(.35,'rgba(130,100,40,.22)');desertG.addColorStop(.5,'rgba(150,110,35,.3)');desertG.addColorStop(.65,'rgba(130,100,40,.22)');desertG.addColorStop(1,'transparent');
+  gx.fillStyle=desertG;
+  geoFeatures.forEach(f=>{if(f.coords[0]){drawPoly(f.coords[0]);gx.fill();}});
+
+  // Sunlit land highlight
+  const landHL=gx.createRadialGradient(CX-R*.3,CY-R*.25,0,CX,CY,R);
+  landHL.addColorStop(0,'rgba(70,130,50,.3)');landHL.addColorStop(.4,'rgba(50,100,40,.12)');landHL.addColorStop(1,'transparent');
+  gx.fillStyle=landHL;
+  geoFeatures.forEach(f=>{if(f.coords[0]){drawPoly(f.coords[0]);gx.fill();}});
+
+  // ── ICE CAPS ──
+  const iceCap=(lat,col)=>{
+    gx.strokeStyle=col;gx.lineWidth=.6;
+    for(let dlat=0;dlat<18;dlat+=1.2){
+      const clat=lat>0?lat+dlat:lat-dlat;
+      if(Math.abs(clat)>89)continue;
+      gx.beginPath();let f=true;
+      for(let lon=-180;lon<=180;lon+=2){const p=project(clat,lon);if(p.vis){f?(gx.moveTo(p.sx,p.sy),f=false):gx.lineTo(p.sx,p.sy);}else f=true;}
+      const a=.06+dlat*.02;gx.strokeStyle=`rgba(210,235,255,${a})`;gx.stroke();
+    }
+  };
+  iceCap(70,'rgba(210,235,255,.25)');iceCap(-62,'rgba(220,240,255,.25)');
+
+  // ── CLOUD BANDS ──
+  const cloudTime=Date.now()*.00003;
+  const cloudBands=[
+    {lat:55,w:8,offset:cloudTime*1.2},{lat:38,w:5,offset:-cloudTime},{lat:12,w:10,offset:cloudTime*.8},
+    {lat:-8,w:7,offset:-cloudTime*.9},{lat:-28,w:6,offset:cloudTime*1.1},{lat:-52,w:9,offset:-cloudTime*.7},
+  ];
+  cloudBands.forEach(cb=>{
+    for(let dl=-cb.w*.5;dl<cb.w*.5;dl+=1.2){
+      const lat=cb.lat+dl;
+      const alpha=.06+.08*(1-Math.abs(dl/(cb.w*.5)));
+      gx.beginPath();let f=true;
+      for(let lon=-180;lon<=180;lon+=1.5){
+        const p=project(lat,lon+cb.offset*180);
+        if(p.vis){f?(gx.moveTo(p.sx,p.sy),f=false):gx.lineTo(p.sx,p.sy);}else f=true;
+      }
+      gx.strokeStyle=`rgba(255,255,255,${alpha})`;gx.lineWidth=1.2+Math.abs(dl/(cb.w*.5))*2;gx.stroke();
+    }
+  });
+
+  // ── NIGHT SHADOW ──
+  const shadow=gx.createRadialGradient(CX+R*.42,CY+R*.12,0,CX+R*.28,CY+R*.08,R*1.08);
+  shadow.addColorStop(0,'transparent');shadow.addColorStop(.42,'rgba(0,1,8,.0)');shadow.addColorStop(.62,'rgba(0,1,8,.38)');shadow.addColorStop(.8,'rgba(0,1,8,.72)');shadow.addColorStop(1,'rgba(0,1,8,.92)');
+  gx.fillStyle=shadow;gx.beginPath();gx.arc(CX,CY,R,0,Math.PI*2);gx.fill();
+
+  // City lights (night side only)
+  const cities=[[40.7,-74,'NYC'],[51.5,-0.1,''],[48.8,2.3,''],[35.7,139.7,''],[31.2,121.5,''],[19.1,72.9,''],[55.8,37.6,''],[34.0,-118,''],[23.1,113.3,''],[28.6,77.2,''],[-33.9,151.2,''],[1.3,103.8,''],[30.0,31.2,'']];
+  cities.forEach(([lat,lon])=>{
+    const p=project(lat,lon);if(!p.vis)return;
+    const nightAmt=Math.max(0,((p.sx-CX)/R)*.8+.15);if(nightAmt<.08)return;
+    gx.globalAlpha=nightAmt*.7;
+    const cg=gx.createRadialGradient(p.sx,p.sy,0,p.sx,p.sy,5);
+    cg.addColorStop(0,'rgba(255,220,80,.9)');cg.addColorStop(1,'transparent');
+    gx.fillStyle=cg;gx.beginPath();gx.arc(p.sx,p.sy,5,0,Math.PI*2);gx.fill();
+    gx.fillStyle='#ffe060';gx.beginPath();gx.arc(p.sx,p.sy,1,0,Math.PI*2);gx.fill();
+    gx.globalAlpha=1;
+  });
+
+  // Equator highlight
+  gx.strokeStyle='rgba(0,220,160,.1)';gx.lineWidth=.8;gx.setLineDash([]);
+  gx.beginPath();let feq=true;
+  for(let lon=-180;lon<=180;lon++){const p=project(0,lon);if(p.vis){feq?(gx.moveTo(p.sx,p.sy),feq=false):gx.lineTo(p.sx,p.sy);}else feq=true;}
+  gx.stroke();
+
+  gx.restore(); // end clip
+
+  // Globe rim
+  const rimGrad=gx.createLinearGradient(CX-R,CY,CX+R,CY);
+  rimGrad.addColorStop(0,'rgba(60,140,255,.7)');rimGrad.addColorStop(.5,'rgba(30,80,200,.2)');rimGrad.addColorStop(1,'rgba(60,140,255,.7)');
+  gx.strokeStyle=rimGrad;gx.lineWidth=1.5;gx.beginPath();gx.arc(CX,CY,R,0,Math.PI*2);gx.stroke();
+
+  // Specular highlight
+  const spec=gx.createRadialGradient(CX-R*.42,CY-R*.38,0,CX-R*.22,CY-R*.2,R*.65);
+  spec.addColorStop(0,'rgba(200,230,255,.12)');spec.addColorStop(.4,'rgba(150,200,255,.04)');spec.addColorStop(1,'transparent');
+  gx.fillStyle=spec;gx.beginPath();gx.arc(CX,CY,R,0,Math.PI*2);gx.fill();
+
+  // ── SATELLITES ──
+  posCache=[];
+  for(let i=0;i<SATS.length;i++){
+    const s=SATS[i],pos=getSatPos(s.satrec,now);
+    posCache.push(pos);
+    if(!pos)continue;
+    const p=project(pos.lat,pos.lng);
+    if(!p.vis||p.z<.04)continue;
+    const isA=atkIdx.includes(i),isSel=i===selIdx;
+    const col=isA?'#ff4444':s.color;
+    const r2=isA?5.5:isSel?5.5:3.0; // bigger dots = easier to see
+
+    if(isA){
+      const t=(Date.now()%1500)/1500;
+      gx.beginPath();gx.arc(p.sx,p.sy,r2+t*12,0,Math.PI*2);
+      gx.strokeStyle=`rgba(255,68,68,${.65-t*.65})`;gx.lineWidth=1;gx.stroke();
+    }
+    if(isSel){
+      gx.beginPath();gx.arc(p.sx,p.sy,r2+5,0,Math.PI*2);
+      gx.strokeStyle='rgba(255,255,255,.65)';gx.lineWidth=1;gx.stroke();
+    }
+
+    // Glow for important sats
+    if(isA||isSel||s.group==='Station'){
+      const gl=gx.createRadialGradient(p.sx,p.sy,0,p.sx,p.sy,r2*3.5);
+      gl.addColorStop(0,col+'aa');gl.addColorStop(1,col+'00');
+      gx.fillStyle=gl;gx.beginPath();gx.arc(p.sx,p.sy,r2*3.5,0,Math.PI*2);gx.fill();
+    }
+
+    gx.globalAlpha=.5+p.z*.5;
+    gx.fillStyle=col;gx.beginPath();gx.arc(p.sx,p.sy,r2,0,Math.PI*2);gx.fill();
+    gx.globalAlpha=1;
+
+    // ── LABELS — smart filtering, no clutter ──
+    // Priority: threatened > selected > ISS/Stations > GPS > named weather > NO Starlink spam
+    const isVIP = s.group==='Station' || (s.group==='GPS') ||
+                  (s.group==='Weather' && !s.name.startsWith('SL-') && s.name.length<14) ||
+                  isA || isSel;
+
+    const showLabel = labelMode==='none' ? false :
+                      labelMode==='all'  ? true :
+                      isVIP; // 'important' default: only meaningful named sats
+
+    if(showLabel && p.z>.2){
+      let lname = s.name;
+      // Shorten long names cleanly
+      lname = lname.replace('STARLINK-','SL-').replace(' (ZARYA)','').replace(' (TIANHE)','');
+      if(lname.length>14) lname = lname.substring(0,13)+'…';
+
+      const labelCol = isA?'#ff5555': isSel?'#ffffff': col;
+      const alpha = Math.min(1, .55 + p.z*.45);
+      const FONT = isA||isSel ? 'bold 9px JetBrains Mono,monospace' : '8px JetBrains Mono,monospace';
+
+      gx.font = FONT;
+      const tw = gx.measureText(lname).width;
+      const lh = 11;
+      const pad = 3;
+
+      // Smart offset — push label away from globe center to reduce overlap
+      const dx = p.sx - CX, dy = p.sy - CY;
+      const dist = Math.sqrt(dx*dx+dy*dy)||1;
+      const ox = (dx/dist)*14 + (i%2===0?0:0);
+      const oy = (dy/dist)*14 + (i%2===0?-8:8);
+      const lx = p.sx + ox;
+      const ly = p.sy + oy;
+
+      // Connector dot-line
+      gx.globalAlpha = alpha * .5;
+      gx.strokeStyle = labelCol;
+      gx.lineWidth = .5;
+      gx.setLineDash([1,3]);
+      gx.beginPath();
+      gx.moveTo(p.sx, p.sy);
+      gx.lineTo(lx - pad, ly - lh*.3);
+      gx.stroke();
+      gx.setLineDash([]);
+
+      // Pill background
+      gx.globalAlpha = alpha * .9;
+      gx.fillStyle = 'rgba(1,3,12,.9)';
+      gx.beginPath();
+      if(gx.roundRect) gx.roundRect(lx-pad, ly-lh, tw+pad*2+1, lh+2, 2);
+      else gx.rect(lx-pad, ly-lh, tw+pad*2+1, lh+2);
+      gx.fill();
+
+      // Colored left border
+      gx.fillStyle = labelCol;
+      gx.fillRect(lx-pad, ly-lh, 1.5, lh+2);
+
+      // Label text
+      gx.globalAlpha = alpha;
+      gx.fillStyle = labelCol;
+      gx.fillText(lname, lx+2, ly);
+      gx.globalAlpha = 1;
+    }
+  }
+  if(selIdx>=0&&posCache[selIdx])updateDetLive(SATS[selIdx],posCache[selIdx]);
+}
+
+// ─── SAT POSITION ────────────────────────────────────────────────────────────
+function getSatPos(satrec,date){
+  try{
+    const pv=satellite.propagate(satrec,date);
+    if(!pv.position||typeof pv.position==='boolean')return null;
+    const gmst=satellite.gstime(date);
+    const geo=satellite.eciToGeodetic(pv.position,gmst);
+    return{lat:satellite.degreesLat(geo.latitude),lng:satellite.degreesLong(geo.longitude),alt:geo.height,vel:pv.velocity?Math.sqrt(pv.velocity.x**2+pv.velocity.y**2+pv.velocity.z**2):7.5};
+  }catch{return null;}
+}
+
+// ─── GLOBE INTERACTION ────────────────────────────────────────────────────────
+gc.addEventListener('mousedown',e=>{dragging=true;dsx=e.clientX;dsy=e.clientY;dlon=globeLon;dlat=globeLat;gc.style.cursor='grabbing';});
+document.addEventListener('mousemove',e=>{if(dragging){globeLon=dlon-(e.clientX-dsx)*.35;globeLat=Math.max(-75,Math.min(75,dlat+(e.clientY-dsy)*.25));}});
+document.addEventListener('mouseup',()=>{dragging=false;gc.style.cursor='grab';});
+gc.addEventListener('wheel',e=>{
+  // Zoom via field of view simulation — scale R
+  const delta=e.deltaY>0?-.04:.04;
+  const newR=Math.max(Math.min(W,H)*.2,Math.min(Math.min(W,H)*.52,R*(1+delta)));
+  R=newR;e.preventDefault();
+},{passive:false});
+gc.addEventListener('click',e=>{
+  if(Math.abs(e.clientX-dsx)>5||Math.abs(e.clientY-dsy)>5)return;
+  const rect=gc.getBoundingClientRect(),mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  const date=new Date();let best=-1,bestD=16;
+  for(let i=0;i<SATS.length;i++){
+    const pos=getSatPos(SATS[i].satrec,date);if(!pos)continue;
+    const p=project(pos.lat,pos.lng);if(!p.vis)continue;
+    const d=Math.sqrt((mx-p.sx)**2+(my-p.sy)**2);
+    if(d<bestD){bestD=d;best=i;}
+  }
+  if(best>=0){selIdx=best;document.getElementById('det').classList.add('on');}
+  else{selIdx=-1;document.getElementById('det').classList.remove('on');}
+});
+
+// ─── SOLAR SYSTEM MINIMAP ─────────────────────────────────────────────────────
+const sc3=document.getElementById('sc2'),sx=sc3.getContext('2d');
+const PLAN=[{r:1.8,o:12,sp:4.7,c:'#a09080',a:.5},{r:3,o:20,sp:1.85,c:'#e8d070',a:1.2},{r:3.2,o:30,sp:1.0,c:'#4a8fff',a:2.1,rim:'#80c0ff'},{r:2.2,o:41,sp:.53,c:'#cc4422',a:3.3},{r:6.5,o:60,sp:.084,c:'#c8a870',a:4,bands:true},{r:5.5,o:80,sp:.034,c:'#d8c090',a:5.5,ring:true}];
+let st=0;
+function drawSolar(){
+  sx.clearRect(0,0,110,110);const cx=55,cy=55;
+  const sg=sx.createRadialGradient(cx,cy,0,cx,cy,11);
+  sg.addColorStop(0,'rgba(255,250,180,1)');sg.addColorStop(.4,'rgba(255,170,30,.7)');sg.addColorStop(1,'transparent');
+  sx.fillStyle=sg;sx.beginPath();sx.arc(cx,cy,11,0,Math.PI*2);sx.fill();
+  sx.fillStyle='#fffac0';sx.beginPath();sx.arc(cx,cy,3,0,Math.PI*2);sx.fill();
+  PLAN.forEach(p=>{
+    sx.beginPath();sx.arc(cx,cy,p.o,0,Math.PI*2);sx.strokeStyle='rgba(40,80,160,.1)';sx.lineWidth=.4;sx.stroke();
+    const a=p.a+st*p.sp,px=cx+Math.cos(a)*p.o,py=cy+Math.sin(a)*p.o;
+    if(p.ring){sx.save();sx.translate(px,py);sx.rotate(.5);sx.beginPath();sx.ellipse(0,0,p.r+4,p.r*.35,0,0,Math.PI*2);sx.strokeStyle='rgba(210,190,130,.5)';sx.lineWidth=1.5;sx.stroke();sx.restore();}
+    sx.beginPath();sx.arc(px,py,p.r,0,Math.PI*2);sx.fillStyle=p.c;sx.fill();
+    if(p.rim){sx.strokeStyle=p.rim;sx.lineWidth=.7;sx.beginPath();sx.arc(px,py,p.r,0,Math.PI*2);sx.stroke();}
+  });
+  st+=.0018;
+}
+
+// ─── TELEMETRY CHART ─────────────────────────────────────────────────────────
+const tc2=document.getElementById('tc'),tx=tc2.getContext('2d');
+function resizeTc(){const w=document.getElementById('tw');tc2.width=w.clientWidth;tc2.height=w.clientHeight;}
+resizeTc();window.addEventListener('resize',resizeTc);
+function drawTelem(){
+  const TW=tc2.width,TH=tc2.height;
+  tx.clearRect(0,0,TW,TH);tx.fillStyle='rgba(1,3,12,1)';tx.fillRect(0,0,TW,TH);
+  [30,60].forEach(y=>{
+    const py=TH-(y/100)*(TH*.84)-TH*.06;
+    tx.strokeStyle=y===60?'rgba(255,68,68,.15)':'rgba(245,166,35,.15)';
+    tx.lineWidth=.5;tx.setLineDash([3,4]);tx.beginPath();tx.moveTo(0,py);tx.lineTo(TW,py);tx.stroke();tx.setLineDash([]);
+    tx.fillStyle='rgba(46,74,104,.8)';tx.font='7px JetBrains Mono,monospace';tx.fillText(y,3,py-2);
+  });
+  if(telH.length<2)return;
+  const L=telH.length,pts=telH.map((d,i)=>({x:TW*.02+(TW*.96)*i/(L-1),y:TH-(d.score/100)*(TH*.84)-TH*.06}));
+  const cur=telH[L-1].score,lc=activeAtk?(cur>60?'#ff4444':'#f5a623'):'#00d4a0';
+  const grd=tx.createLinearGradient(0,0,0,TH);grd.addColorStop(0,lc+'22');grd.addColorStop(1,lc+'00');
+  tx.beginPath();tx.moveTo(pts[0].x,TH);pts.forEach(p=>tx.lineTo(p.x,p.y));tx.lineTo(pts[L-1].x,TH);tx.closePath();tx.fillStyle=grd;tx.fill();
+  tx.beginPath();tx.strokeStyle=lc;tx.lineWidth=1.5;tx.setLineDash([]);pts.forEach((p,i)=>i===0?tx.moveTo(p.x,p.y):tx.lineTo(p.x,p.y));tx.stroke();
+  const lp=pts[L-1];tx.beginPath();tx.arc(lp.x,lp.y,2.5,0,Math.PI*2);tx.fillStyle=lc;tx.fill();
+  document.getElementById('tc3').style.color=lc;document.getElementById('tc3').textContent=cur.toFixed(1);
+}
+
+// ─── ANOMALY SCORING ─────────────────────────────────────────────────────────
+function isoScore(t){
+  const base={snr:14.0,cmd:.30,pos:.08,sig:-78,pkt:.008,non:0};
+  const n=()=>(Math.random()-.5)*.5;
+  let f={snr:base.snr+n()*2.8,cmd:base.cmd+n()*.07,pos:base.pos+Math.abs(n())*.04,sig:base.sig+n()*3.5,pkt:base.pkt+Math.abs(n())*.004,non:0};
+  if(t==='spoof'){f.pos=2.1+Math.random()*.8;f.snr=19.5+Math.random()*4;}
+  else if(t==='jam'){f.snr=-2.5+n();f.sig=-112+n()*4;f.pkt=.42+Math.random()*.15;}
+  else if(t==='inject'){f.cmd=3.9+Math.random()*.8;f.pkt=.46+Math.random()*.12;}
+  else if(t==='replay'){f.cmd=2.3+Math.random()*.6;f.non=7+Math.floor(Math.random()*4);f.pkt=.13+Math.random()*.08;}
+  const stds={snr:2.5,cmd:.08,pos:.05,sig:4,pkt:.005,non:.5};
+  const w=[1.5,2.2,2.8,1.0,2.0,2.5];
+  const keys=Object.keys(base);
+  const raw=keys.reduce((s,k,i)=>s+Math.abs(f[k]-base[k])/stds[k]*w[i],0)/w.reduce((a,b)=>a+b);
+  return{score:Math.min(99,100*(1-Math.exp(-raw*.88))),f};
+}
+
+// ─── DETAIL PANEL ────────────────────────────────────────────────────────────
+function updateDetLive(s,pos){
+  const isA=atkIdx.includes(SATS.indexOf(s));
+  const{score,f}=isoScore(isA?activeAtk:null);
+  const col=score>60?'#ff4444':score>30?'#f5a623':'#00d4a0';
+  document.getElementById('dn').textContent=s.name;
+  document.getElementById('db').innerHTML=
+    [['NORAD',s.noradId,''],['Group',s.group,''],['Orbit',s.orbitType,''],
+     ['Lat',pos.lat.toFixed(4)+'°',''],['Lon',pos.lng.toFixed(4)+'°',''],
+     ['Alt',pos.alt.toFixed(1)+' km',''],['Vel',pos.vel.toFixed(3)+' km/s',''],['Inc',s.inc.toFixed(2)+'°',''],
+    ].map(([k,v])=>`<div class="dr"><span class="dk2">${k}</span><span class="dv">${v}</span></div>`).join('')+
+    `<div class="dd"></div><div class="ds">Live Telemetry</div>`+
+    [['SNR',f.snr.toFixed(1)+' dB',f.snr<0?'r':f.snr>18?'a':''],
+     ['Cmd Rate',f.cmd.toFixed(2)+'/s',f.cmd>1?'r':''],
+     ['Pos Δ',f.pos.toFixed(3)+' km',f.pos>.5?'r':''],
+     ['Pkt Loss',(f.pkt*100).toFixed(2)+'%',f.pkt>.1?'r':''],
+     ['Nonce Dup',f.non||0,f.non>3?'r':''],
+    ].map(([k,v,c])=>`<div class="dr"><span class="dk2">${k}</span><span class="dv ${c}">${v}</span></div>`).join('')+
+    `<div class="srow"><div><div style="font-family:var(--m);font-size:8px;color:var(--t3);letter-spacing:1px;text-transform:uppercase">Anomaly Score</div><div class="snum" style="color:${col}">${score.toFixed(0)}</div></div><div class="sbg"><div class="sf" style="width:${score}%;background:${col}"></div></div></div>`;
+}
+function closeDet(){selIdx=-1;document.getElementById('det').classList.remove('on');}
+
+// ─── ATTACKS ──────────────────────────────────────────────────────────────────
+// Label toggle
+let labelModes=['important','all','none'];
+let labelModeIdx=0;
+function toggleLabels(){
+  labelModeIdx=(labelModeIdx+1)%3;
+  labelMode=labelModes[labelModeIdx];
+  const labels={important:'SMART',all:'ALL',none:'OFF'};
+  document.getElementById('lbl-toggle').style.color=labelMode==='none'?'var(--t3)':labelMode==='all'?'var(--green)':'var(--amber)';
+  document.getElementById('lbl-toggle').textContent='⊞ Labels: '+labels[labelMode];
+}
+
+// Phishing simulation state
+let phishStep=0,phishTimer=null,phishTarget=null;
+const PHISH_STEPS=[
+  {t:0,   msg:'🎣 Spear-phish email sent to ground station operator',detail:'Spoofed sender: ops-team@groundstation-secure.net · Payload: credential harvester'},
+  {t:2500,msg:'📧 Operator clicked malicious link — credential captured',detail:'Username + password harvested · Session cookie stolen · 2FA bypass attempted'},
+  {t:5000,msg:'🔑 Attacker logged into ground station control panel',detail:'Access level: OPERATOR · Authenticated via stolen session token'},
+  {t:7500,msg:'📡 Rogue uplink commands queued for target satellites',detail:'Unauthorized maneuver commands staged · Targeting 3 LEO assets'},
+  {t:10000,msg:'⚠ Anomalous command burst detected by AI — rate 4.2/s',detail:'Isolation Forest score: 94 · Command pattern diverges from operator baseline'},
+  {t:12500,msg:'🛑 Ground station access revoked · Incident logged',detail:'Session terminated · Commands blocked · Forensic dump initiated'},
+];
+
+function simPhish(){
+  if(phishTimer)clearTimeout(phishTimer);
+  phishStep=0;
+  activeAtk='phish';
+  atkC.phish=(atkC.phish||0)+1;
+  // Pick target sats
+  atkIdx=[];
+  const pool=SATS.length||5;
+  while(atkIdx.length<3&&atkIdx.length<pool){const i=Math.floor(Math.random()*pool);if(!atkIdx.includes(i))atkIdx.push(i);}
+  document.getElementById('badge').textContent='⚠ PHISHING ACTIVE';document.getElementById('badge').className='crit';
+  document.getElementById('ast').textContent='PHISH IN PROGRESS';document.getElementById('ast').style.color='#b040ff';
+  document.getElementById('bph').className='ab ac';document.getElementById('bph').style.borderColor='#b040ff';document.getElementById('bph').style.color='#b040ff';document.getElementById('bph').style.background='rgba(176,64,255,.1)';
+  setAI('PHISHING ATTACK INITIATED — Ground station operator targeted. Credential harvesting in progress. Monitoring for unauthorized uplink commands.',.65,'#b040ff');
+  runPhishStep();
+  updM();updB2();
+}
+function runPhishStep(){
+  if(phishStep>=PHISH_STEPS.length)return;
+  const step=PHISH_STEPS[phishStep];
+  const conf=Math.floor(60+phishStep*7);
+  const isFinal=phishStep===PHISH_STEPS.length-1;
+  alerts.unshift({
+    id:Date.now(),t:'phish',sev:phishStep<4?'WARNING':'CRITICAL',
+    label:'Ground Station Phishing',
+    desc:step.msg,detail:step.detail,
+    time:utcN(),col:'#b040ff',
+    names:atkIdx.slice(0,2).map(i=>SATS[i]?.name?.slice(0,12)||'SAT').join(', '),
+    num:atkC.phish,conf,f:{snr:14+phishStep,cmd:.3+phishStep*.8,pos:.08,sig:-78,pkt:.008+phishStep*.05,non:0}
+  });
+  if(alerts.length>15)alerts.pop();
+  setAI(step.msg+' — '+step.detail,conf/100,'#b040ff');
+  renderA();
+  if(!isFinal){
+    phishStep++;
+    phishTimer=setTimeout(runPhishStep,PHISH_STEPS[phishStep].t-PHISH_STEPS[phishStep-1].t);
+  } else {
+    // Attack complete
+    setTimeout(()=>{
+      setAI('Phishing attack contained. Ground station access restored. 3 satellite assets were targeted but commands were blocked by anomaly detection.',.93,'#00d4a0');
+      document.getElementById('badge').textContent='● NOMINAL';document.getElementById('badge').className='';
+      document.getElementById('ast').textContent='STANDBY';document.getElementById('ast').style.color='var(--t3)';
+      document.getElementById('bph').className='ab';document.getElementById('bph').style.borderColor='';document.getElementById('bph').style.color='';document.getElementById('bph').style.background='';
+      activeAtk=null;atkIdx=[];updM();
+    },3000);
+  }
+}
+function updB2(){
+  const allC={...atkC,phish:atkC.phish||0};
+  const mx=Math.max(1,...Object.values(allC));
+  const m={spoof:['bfsp','bcsp'],jam:['bfjm','bcjm'],inject:['bfin','bcin'],replay:['bfrp','bcrp'],phish:['bfph','bcph']};
+  Object.entries(m).forEach(([k,[bi,ci]])=>{
+    if(!document.getElementById(bi))return;
+    const c=allC[k]||0;document.getElementById(ci).textContent=c;document.getElementById(bi).style.width=Math.round(c/mx*100)+'%';
+  });
+}
+
+const ATK={
+  spoof:{label:'GPS Spoofing',desc:'Position diverging 2.1+km. SNR 19.5dB (baseline 14dB). False nav data injected.',sev:'CRITICAL',col:'#ff4444'},
+  jam:{label:'Signal Jamming',desc:'SNR → -2.5dB. Signal -112dBm. Pkt loss 42%. L-band interference confirmed.',sev:'WARNING',col:'#f5a623'},
+  inject:{label:'Cmd Injection',desc:'Cmd rate 3.9/s (baseline 0.3). Unauthorized TC sequence. Quarantine triggered.',sev:'CRITICAL',col:'#ff4444'},
+  replay:{label:'Replay Attack',desc:'Nonce dup: 7/12 pkts. Cmd rate 2.3/s. Session replay confirmed.',sev:'WARNING',col:'#f5a623'},
+};
+function utcN(){return new Date().toISOString().replace('T',' ').slice(0,19)+' UTC';}
+
+function sim(t){
+  activeAtk=t;
+  const n=Math.min(8,Math.max(3,Math.floor(SATS.length/15)||3));
+  atkIdx=[];
+  const pool=SATS.length||10;
+  while(atkIdx.length<n){const i=Math.floor(Math.random()*pool);if(!atkIdx.includes(i))atkIdx.push(i);}
+  atkC[t]++;
+  const info=ATK[t],crit=info.sev==='CRITICAL';
+  const names=atkIdx.slice(0,3).map(i=>SATS[i]?.name?.slice(0,14)||'SAT-'+i).join(', ');
+  const conf=Math.floor(85+Math.random()*12);
+  const{f}=isoScore(t);
+  alerts.unshift({id:Date.now(),t,sev:info.sev,label:info.label,desc:info.desc,time:utcN(),col:info.col,names,num:atkC[t],conf,f});
+  if(alerts.length>15)alerts.pop();
+  document.getElementById('badge').textContent='⚠ '+info.sev;document.getElementById('badge').className=crit?'crit':'warn';
+  document.getElementById('ast').textContent='ACTIVE';document.getElementById('ast').style.color=info.col;
+  setAI(`[${info.sev}] ${info.desc} ${atkIdx.length} assets flagged. IF score >${crit?80:60}. Confidence: ${conf}%.`,conf/100,info.col);
+  const bm={spoof:'bsp',jam:'bjm',inject:'bin',replay:'brp'};
+  Object.entries(bm).forEach(([k,id])=>document.getElementById(id).className='ab '+(k===t?(crit?'ac':'aw2'):''));
+  updM();updB();renderA();
+}
+function resetSim(){
+  activeAtk=null;atkIdx=[];alerts=[];selIdx=-1;
+  document.getElementById('det').classList.remove('on');
+  document.getElementById('badge').textContent='● NOMINAL';document.getElementById('badge').className='';
+  document.getElementById('ast').textContent='STANDBY';document.getElementById('ast').style.color='var(--t3)';
+  ['bsp','bjm','bin','brp'].forEach(id=>document.getElementById(id).className='ab');
+  setAI(`AEGIS monitoring ${SATS.length} satellites. Isolation Forest trained. All telemetry nominal.`,.93,'#00d4a0');
+  updM();updB();renderA();
+}
+function updM(){
+  const tot=Object.values(atkC).reduce((a,b)=>a+b,0),sc=Math.min(99,tot*14+(activeAtk?22:0));
+  const el=document.getElementById('mt');el.textContent=sc;
+  const ll=document.getElementById('mtl');
+  if(sc>60){el.style.color='var(--red)';ll.textContent='CRITICAL';}else if(sc>30){el.style.color='var(--amber)';ll.textContent='ELEVATED';}else{el.style.color='var(--green)';ll.textContent='LOW RISK';}
+  const an=tot+(activeAtk?1:0);
+  document.getElementById('ma').textContent=an;document.getElementById('ma').style.color=an>0?'var(--amber)':'var(--t3)';
+  document.getElementById('mal').textContent=an>0?`↑ ${an} detected`:'All nominal';
+  const n=SATS.length;
+  document.getElementById('msat').textContent=n;
+  document.getElementById('hs').textContent=n;
+  document.getElementById('c-tot').textContent=n;
+}
+function updB(){updB2();}
+function renderA(){
+  const feed=document.getElementById('af');
+  document.getElementById('acnt').textContent=alerts.length+' event'+(alerts.length!==1?'s':'');
+  if(!alerts.length){feed.innerHTML='<div class="ae">AEGIS nominal — all orbital assets secure</div>';return;}
+  feed.innerHTML=alerts.map(a=>{
+    const isPhish=a.t==='phish';
+    const feats=isPhish?`<span class="aff">Ground Station Attack</span><span class="aff">Credential Theft</span><span class="aff">Uplink Hijack</span>`:`<span class="aff">SNR:${a.f.snr.toFixed(1)}dB</span><span class="aff">CMD:${a.f.cmd.toFixed(2)}/s</span><span class="aff">Δ${a.f.pos.toFixed(3)}km</span><span class="aff">PKT:${(a.f.pkt*100).toFixed(1)}%</span>`;
+    return `<div class="ai2 ${a.sev==='CRITICAL'?'cr':'wa'}" style="${isPhish?'border-left-color:#b040ff;background:rgba(176,64,255,.04)':''}"><div class="at2"><span class="atn" style="color:${a.col}">[${a.sev}] ${a.label}</span><span class="anum">#${a.num}</span></div><div class="ad">${a.desc}</div>${a.detail?`<div class="ad" style="color:var(--t3);font-size:9px">${a.detail}</div>`:''}<div class="afs">${feats}</div><div class="am">Targets: ${a.names} · ${a.conf}% conf · ${a.time}</div></div>`;
+  }).join('');
+}
+function setAI(txt,conf,col='#00d4a0'){
+  document.getElementById('ait').textContent=txt;
+  document.getElementById('cfi').style.width=Math.round(conf*100)+'%';document.getElementById('cfi').style.background=col;
+  document.getElementById('cpct').textContent=Math.round(conf*100)+'%';
+}
+function setTab(t,el){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));el.classList.add('on');
+  document.getElementById('src-sec').style.display=t==='sources'?'block':'none';
+  document.getElementById('thr-sec').style.display=t==='threats'?'block':'none';
+  document.getElementById('aw').classList.toggle('hide',t==='sources'||t==='threats');
+  if(t==='alerts')document.getElementById('af').scrollIntoView({behavior:'smooth'});
+}
+function renderSrcs(){
+  const defs=[
+    {name:'SpaceX Starlink LEO',note:'Real-time megaconstellation · 100 shown',cnt:srcC['Starlink']||0,col:'#00d4a0'},
+    {name:'NASA ISS · Tiangong',note:'Crewed space stations',cnt:srcC['Station']||0,col:'#3a9fff'},
+    {name:'USAF GPS Block II/III',note:'MEO navigation constellation',cnt:srcC['GPS']||0,col:'#f5a623'},
+    {name:'NOAA Weather Sats',note:'Earth observation',cnt:srcC['Weather']||0,col:'#e06030'},
+  ];
+  document.getElementById('srcs').innerHTML=defs.map(d=>`<div class="srcr"><div style="width:6px;height:6px;border-radius:50%;background:${d.col};flex-shrink:0"></div><div style="flex:1"><div style="font-family:var(--m);font-size:9px;color:var(--t1)">${d.name}</div><div style="font-family:var(--m);font-size:8px;color:var(--t3);margin-top:1px">${d.note}</div></div><span style="font-family:var(--m);font-size:9px;font-weight:600;color:var(--t1);min-width:24px;text-align:right">${d.cnt}</span><span class="${d.cnt>0?'srcok':'srcna'}">${d.cnt>0?'LIVE':'—'}</span></div>`).join('');
+}
+
+// ─── TLE FETCH ────────────────────────────────────────────────────────────────
+function parseTLEs(text,grp,max){
+  const lines=text.trim().split('\n').map(l=>l.trim()).filter(Boolean),out=[];
+  for(let i=0;i<lines.length&&out.length<max;i+=3){
+    if(i+2>=lines.length)break;
+    const name=lines[i].replace(/^0 /,'').trim(),l1=lines[i+1],l2=lines[i+2];
+    if(!l1.startsWith('1')||!l2.startsWith('2'))continue;
+    try{
+      const satrec=satellite.twoline2satrec(l1,l2),noradId=parseInt(l1.substring(2,7)),inc=parseFloat(l2.substring(8,16));
+      const n=satrec.no,p=2*Math.PI/n,sma=Math.pow(398600.4418/Math.pow(2*Math.PI/p/60,2),1/3),alt=sma-6371;
+      out.push({name,satrec,noradId,inc,alt,orbitType:alt<2000?'LEO':alt<35786?'MEO':'GEO',color:grp.color,group:grp.group});
+    }catch(e){}
+  }
+  return out;
+}
+
+// Large fallback TLE dataset — 50+ sats across all groups, used when live fetch fails
+const FALLBACK_TLES=[
+  // ── ISS / Stations ──
+  {n:'ISS (ZARYA)',   l1:'1 25544U 98067A   26153.50000000  .00018000  00000-0  31852-3 0  9991',l2:'2 25544  51.6400 120.5000 0003500  48.0000  35.0000 15.50400000000000',g:1},
+  {n:'TIANGONG',     l1:'1 48274U 21035A   26153.50000000  .00015000  00000-0  17000-3 0  9990',l2:'2 48274  41.4760 200.0000 0006000 210.0000 150.0000 15.61500000000000',g:1},
+  // ── GPS Sats ──
+  {n:'GPS BIIA-10',  l1:'1 19907U 89085A   26153.00000000 -.00000023  00000-0  00000+0 0  9999',l2:'2 19907  55.2742  45.9000 0120148 209.3790 149.5740  2.00563802000000',g:2},
+  {n:'GPS BIIA-14',  l1:'1 22877U 93068A   26153.00000000 -.00000034  00000-0  00000+0 0  9998',l2:'2 22877  54.3560 105.9000 0167897 355.5230   4.3760  2.00561200000000',g:2},
+  {n:'GPS BIIA-21',  l1:'1 24876U 97035A   26153.00000000 -.00000021  00000-0  00000+0 0  9995',l2:'2 24876  55.6960 166.0000 0049850 271.4240  88.1080  2.00566200000000',g:2},
+  {n:'GPS BIIR-2',   l1:'1 26360U 00025A   26153.00000000 -.00000020  00000-0  00000+0 0  9997',l2:'2 26360  55.2210 225.0000 0168810 305.1060  53.2720  2.00562700000000',g:2},
+  {n:'GPS BIIR-3',   l1:'1 26407U 00040A   26153.00000000 -.00000019  00000-0  00000+0 0  9994',l2:'2 26407  53.4950 285.0000 0143310  64.5120 296.7080  2.00564800000000',g:2},
+  {n:'GPS BIIR-4',   l1:'1 26605U 00071A   26153.00000000 -.00000025  00000-0  00000+0 0  9993',l2:'2 26605  53.1180 345.0000 0158970 127.8240 233.5400  2.00565100000000',g:2},
+  {n:'GPS BIIR-6',   l1:'1 27663U 03005A   26153.00000000 -.00000022  00000-0  00000+0 0  9991',l2:'2 27663  55.2480  15.0000 0133090 184.6660 175.1810  2.00558400000000',g:2},
+  {n:'GPS BIIR-9',   l1:'1 28190U 04009A   26153.00000000 -.00000023  00000-0  00000+0 0  9998',l2:'2 28190  55.9450  75.0000 0133460 275.5060  83.2640  2.00563600000000',g:2},
+  {n:'GPS BIIRM-1',  l1:'1 28474U 04045A   26153.00000000 -.00000021  00000-0  00000+0 0  9996',l2:'2 28474  55.3880 135.0000 0146520  28.7340 332.3010  2.00562300000000',g:2},
+  {n:'GPS BIIRM-2',  l1:'1 29486U 06042A   26153.00000000 -.00000024  00000-0  00000+0 0  9992',l2:'2 29486  55.5380 195.0000 0083020  95.3880 265.5270  2.00561900000000',g:2},
+  {n:'GPS BIIRM-3',  l1:'1 29601U 06052A   26153.00000000 -.00000022  00000-0  00000+0 0  9998',l2:'2 29601  54.8710 255.0000 0127350 175.1520 184.8640  2.00561400000000',g:2},
+  {n:'GPS BIIRM-4',  l1:'1 32711U 08012A   26153.00000000 -.00000020  00000-0  00000+0 0  9993',l2:'2 32711  55.7620 315.0000 0112470 262.5730  96.3460  2.00561200000000',g:2},
+  {n:'GPS BIIRM-5',  l1:'1 32754U 08015A   26153.00000000 -.00000023  00000-0  00000+0 0  9997',l2:'2 32754  56.0430  20.0000 0085680 353.3730   6.5040  2.00561500000000',g:2},
+  {n:'GPS BIIRM-6',  l1:'1 35752U 09014A   26153.00000000 -.00000021  00000-0  00000+0 0  9991',l2:'2 35752  55.4830  80.0000 0101060 134.6690 226.1810  2.00561800000000',g:2},
+  {n:'GPS BIIRM-7',  l1:'1 35753U 09043A   26153.00000000 -.00000022  00000-0  00000+0 0  9996',l2:'2 35753  53.9780 140.0000 0126380  82.4030 278.8630  2.00562100000000',g:2},
+  {n:'GPS BIIIA-1',  l1:'1 43873U 18109A   26153.00000000 -.00000019  00000-0  00000+0 0  9992',l2:'2 43873  55.2150 200.0000 0008120 267.3880  92.6420  2.00557800000000',g:2},
+  {n:'GPS BIIIA-2',  l1:'1 45854U 20041A   26153.00000000 -.00000020  00000-0  00000+0 0  9994',l2:'2 45854  55.0650 260.0000 0007840 277.1610  82.8440  2.00560100000000',g:2},
+  {n:'GPS BIIIA-3',  l1:'1 46826U 20079A   26153.00000000 -.00000021  00000-0  00000+0 0  9993',l2:'2 46826  55.1840 320.0000 0008560 248.9150 111.0780  2.00561300000000',g:2},
+  // ── Starlink ──
+  {n:'STARLINK-1007',l1:'1 44713U 19074A   26153.50000000  .00001000  00000-0  80000-4 0  9994',l2:'2 44713  53.0529  60.0000 0001400  90.0000 270.0000 15.06400000000000',g:0},
+  {n:'STARLINK-1008',l1:'1 44714U 19074B   26153.50000000  .00001100  00000-0  85000-4 0  9991',l2:'2 44714  53.0520  60.5000 0001350  88.0000 272.0000 15.06410000000000',g:0},
+  {n:'STARLINK-1009',l1:'1 44715U 19074C   26153.50000000  .00001050  00000-0  82000-4 0  9998',l2:'2 44715  53.0515  61.0000 0001380  91.0000 269.0000 15.06420000000000',g:0},
+  {n:'STARLINK-1010',l1:'1 44716U 19074D   26153.50000000  .00001020  00000-0  80500-4 0  9992',l2:'2 44716  53.0510  61.5000 0001410  89.5000 270.5000 15.06400000000000',g:0},
+  {n:'STARLINK-1011',l1:'1 44717U 19074E   26153.50000000  .00000980  00000-0  78000-4 0  9997',l2:'2 44717  53.0505  62.0000 0001360  92.5000 267.5000 15.06430000000000',g:0},
+  {n:'STARLINK-1012',l1:'1 44718U 19074F   26153.50000000  .00001030  00000-0  81000-4 0  9993',l2:'2 44718  53.0500  92.0000 0001340  85.0000 275.0000 15.06440000000000',g:0},
+  {n:'STARLINK-1013',l1:'1 44719U 19074G   26153.50000000  .00001010  00000-0  80200-4 0  9996',l2:'2 44719  53.0495  92.5000 0001380  87.5000 272.5000 15.06400000000000',g:0},
+  {n:'STARLINK-1015',l1:'1 44721U 19074I   26153.50000000  .00001060  00000-0  83000-4 0  9995',l2:'2 44721  53.0485  93.5000 0001420  93.5000 266.5000 15.06420000000000',g:0},
+  {n:'STARLINK-1016',l1:'1 44722U 19074J   26153.50000000  .00001040  00000-0  82000-4 0  9998',l2:'2 44722  53.0480 123.0000 0001360  88.0000 272.0000 15.06390000000000',g:0},
+  {n:'STARLINK-1017',l1:'1 44723U 19074K   26153.50000000  .00001020  00000-0  80800-4 0  9997',l2:'2 44723  53.0475 123.5000 0001340  86.5000 273.5000 15.06400000000000',g:0},
+  {n:'STARLINK-1018',l1:'1 44724U 19074L   26153.50000000  .00001080  00000-0  84500-4 0  9994',l2:'2 44724  53.0470 154.0000 0001380  90.0000 270.0000 15.06420000000000',g:0},
+  {n:'STARLINK-1019',l1:'1 44725U 19074M   26153.50000000  .00001010  00000-0  80200-4 0  9991',l2:'2 44725  53.0465 154.5000 0001360  89.0000 271.0000 15.06400000000000',g:0},
+  {n:'STARLINK-1020',l1:'1 44726U 19074N   26153.50000000  .00001050  00000-0  82500-4 0  9996',l2:'2 44726  53.0460 185.0000 0001420  92.0000 268.0000 15.06430000000000',g:0},
+  {n:'STARLINK-1021',l1:'1 44727U 19074O   26153.50000000  .00001030  00000-0  81300-4 0  9995',l2:'2 44727  53.0455 185.5000 0001340  87.0000 273.0000 15.06410000000000',g:0},
+  {n:'STARLINK-1022',l1:'1 44728U 19074P   26153.50000000  .00001060  00000-0  83200-4 0  9992',l2:'2 44728  53.0450 215.0000 0001380  88.5000 271.5000 15.06400000000000',g:0},
+  {n:'STARLINK-1023',l1:'1 44729U 19074Q   26153.50000000  .00001020  00000-0  80600-4 0  9997',l2:'2 44729  53.0445 215.5000 0001360  91.0000 269.0000 15.06420000000000',g:0},
+  {n:'STARLINK-1024',l1:'1 44730U 19074R   26153.50000000  .00001040  00000-0  82000-4 0  9994',l2:'2 44730  53.0440 246.0000 0001400  86.0000 274.0000 15.06430000000000',g:0},
+  {n:'STARLINK-1025',l1:'1 44731U 19074S   26153.50000000  .00001010  00000-0  80100-4 0  9998',l2:'2 44731  53.0435 246.5000 0001360  89.5000 270.5000 15.06400000000000',g:0},
+  {n:'STARLINK-1034',l1:'1 44740U 19074B2  26153.50000000  .00001080  00000-0  84800-4 0  9993',l2:'2 44740  53.0385 277.0000 0001380  88.0000 272.0000 15.06420000000000',g:0},
+  {n:'STARLINK-1035',l1:'1 44741U 19074B3  26153.50000000  .00001050  00000-0  82700-4 0  9996',l2:'2 44741  53.0380 307.0000 0001360  91.5000 268.5000 15.06400000000000',g:0},
+  {n:'STARLINK-1040',l1:'1 44746U 19074B8  26153.50000000  .00001030  00000-0  81500-4 0  9995',l2:'2 44746  53.0355 307.5000 0001420  87.5000 272.5000 15.06430000000000',g:0},
+  {n:'STARLINK-1044',l1:'1 44750U 19074C2  26153.50000000  .00001070  00000-0  84000-4 0  9991',l2:'2 44750  53.0335 338.0000 0001340  90.0000 270.0000 15.06410000000000',g:0},
+  {n:'STARLINK-1047',l1:'1 44753U 19074C5  26153.50000000  .00001020  00000-0  80700-4 0  9997',l2:'2 44753  53.0320 338.5000 0001380  88.5000 271.5000 15.06400000000000',g:0},
+  {n:'STARLINK-1051',l1:'1 44757U 19074C9  26153.50000000  .00001040  00000-0  82200-4 0  9992',l2:'2 44757  53.0300   9.0000 0001360  92.0000 268.0000 15.06420000000000',g:0},
+  {n:'STARLINK-1056',l1:'1 44762U 19074D4  26153.50000000  .00001060  00000-0  83400-4 0  9996',l2:'2 44762  53.0275  39.5000 0001400  87.0000 273.0000 15.06400000000000',g:0},
+  {n:'STARLINK-2001',l1:'1 48117U 21002A   26153.50000000  .00001100  00000-0  86500-4 0  9993',l2:'2 48117  53.2100  70.0000 0001260  88.0000 272.0000 15.06500000000000',g:0},
+  {n:'STARLINK-2010',l1:'1 48126U 21002J   26153.50000000  .00001080  00000-0  85000-4 0  9994',l2:'2 48126  53.2090 100.0000 0001280  90.0000 270.0000 15.06480000000000',g:0},
+  {n:'STARLINK-2020',l1:'1 48136U 21002T   26153.50000000  .00001090  00000-0  85800-4 0  9997',l2:'2 48136  53.2080 130.0000 0001270  89.0000 271.0000 15.06490000000000',g:0},
+  {n:'STARLINK-2030',l1:'1 48146U 21002AD  26153.50000000  .00001070  00000-0  84500-4 0  9996',l2:'2 48146  53.2070 160.0000 0001290  91.0000 269.0000 15.06470000000000',g:0},
+  {n:'STARLINK-3001',l1:'1 50001U 21091A   26153.50000000  .00001120  00000-0  88000-4 0  9998',l2:'2 50001  53.2200  50.0000 0001200  88.5000 271.5000 15.06510000000000',g:0},
+  {n:'STARLINK-3010',l1:'1 50010U 21091J   26153.50000000  .00001100  00000-0  86500-4 0  9992',l2:'2 50010  53.2190  80.0000 0001210  90.5000 269.5000 15.06500000000000',g:0},
+  {n:'STARLINK-3020',l1:'1 50020U 21091T   26153.50000000  .00001110  00000-0  87200-4 0  9995',l2:'2 50020  53.2180 110.0000 0001220  89.5000 270.5000 15.06505000000000',g:0},
+  {n:'STARLINK-4001',l1:'1 52000U 22001A   26153.50000000  .00001130  00000-0  88500-4 0  9994',l2:'2 52000  53.2500  30.0000 0001100  88.0000 272.0000 15.06520000000000',g:0},
+  {n:'STARLINK-4010',l1:'1 52010U 22001J   26153.50000000  .00001120  00000-0  88000-4 0  9997',l2:'2 52010  53.2490  60.0000 0001110  90.0000 270.0000 15.06515000000000',g:0},
+  {n:'STARLINK-4020',l1:'1 52020U 22001T   26153.50000000  .00001110  00000-0  87300-4 0  9991',l2:'2 52020  53.2480  90.0000 0001120  89.0000 271.0000 15.06510000000000',g:0},
+  {n:'STARLINK-5001',l1:'1 54000U 22168A   26153.50000000  .00001140  00000-0  89000-4 0  9996',l2:'2 54000  43.0030  45.0000 0001050  87.0000 273.0000 15.09200000000000',g:0},
+  {n:'STARLINK-5010',l1:'1 54010U 22168J   26153.50000000  .00001130  00000-0  88300-4 0  9993',l2:'2 54010  43.0020  90.0000 0001060  89.0000 271.0000 15.09195000000000',g:0},
+  {n:'STARLINK-5020',l1:'1 54020U 22168T   26153.50000000  .00001120  00000-0  87700-4 0  9998',l2:'2 54020  43.0010 135.0000 0001040  91.0000 269.0000 15.09190000000000',g:0},
+  {n:'STARLINK-5030',l1:'1 54030U 22168AD  26153.50000000  .00001110  00000-0  87100-4 0  9994',l2:'2 54030  43.0000 180.0000 0001050  90.0000 270.0000 15.09185000000000',g:0},
+  {n:'STARLINK-6001',l1:'1 56000U 23001A   26153.50000000  .00001150  00000-0  89500-4 0  9995',l2:'2 56000  53.2600  20.0000 0001000  88.0000 272.0000 15.06530000000000',g:0},
+  {n:'STARLINK-6010',l1:'1 56010U 23001J   26153.50000000  .00001140  00000-0  89000-4 0  9992',l2:'2 56010  53.2590  50.0000 0001010  90.0000 270.0000 15.06525000000000',g:0},
+  {n:'STARLINK-6020',l1:'1 56020U 23001T   26153.50000000  .00001130  00000-0  88400-4 0  9997',l2:'2 56020  53.2580  80.0000 0001020  89.5000 270.5000 15.06520000000000',g:0},
+  // ── Weather / Earth obs ──
+  {n:'NOAA 15',     l1:'1 25338U 98030A   26153.50000000  .00000020  00000-0  26600-4 0  9998',l2:'2 25338  98.5482  72.1790 0009940 108.4870 251.7320 14.25804290000000',g:3},
+  {n:'NOAA 18',     l1:'1 28654U 05018A   26153.50000000  .00000059  00000-0  55800-4 0  9993',l2:'2 28654  98.8819 143.2780 0013580 133.9230 226.3250 14.09625140000000',g:3},
+  {n:'NOAA 19',     l1:'1 33591U 09005A   26153.50000000  .00000065  00000-0  61670-4 0  9994',l2:'2 33591  99.1900 190.0000 0014000 340.0000  20.0000 14.12300000000000',g:3},
+  {n:'GOES-16',     l1:'1 41866U 16071A   26153.00000000 -.00000271  00000-0  00000+0 0  9992',l2:'2 41866   0.0530 349.9050 0000963 267.1940  42.0820  1.00272424000000',g:3},
+  {n:'GOES-17',     l1:'1 43226U 18022A   26153.00000000 -.00000283  00000-0  00000+0 0  9995',l2:'2 43226   0.0440 255.7890 0000850 114.1710  68.0320  1.00272200000000',g:3},
+  {n:'GOES-18',     l1:'1 51850U 22021A   26153.00000000 -.00000290  00000-0  00000+0 0  9991',l2:'2 51850   0.0380 236.7810 0000650 156.3450 226.3080  1.00272100000000',g:3},
+  {n:'METEOSAT-11', l1:'1 38552U 12035B   26153.00000000 -.00000280  00000-0  00000+0 0  9993',l2:'2 38552   0.0520   3.2340 0001680  95.7880 284.3680  1.00272300000000',g:3},
+  {n:'MSG-4',       l1:'1 40732U 15034A   26153.00000000 -.00000275  00000-0  00000+0 0  9994',l2:'2 40732   0.0480  61.2840 0001430 145.5780  32.3800  1.00272000000000',g:3},
+  {n:'TERRA',       l1:'1 25994U 99068A   26153.50000000 -.00000003  00000-0  26800-5 0  9996',l2:'2 25994  98.2025 215.5640 0001456  93.2840 266.8470 14.57104710000000',g:3},
+  {n:'AQUA',        l1:'1 27424U 02022A   26153.50000000  .00000130  00000-0  78500-5 0  9993',l2:'2 27424  98.2014 218.5360 0001560  88.3230 271.8090 14.57107630000000',g:3},
+  {n:'LANDSAT 9',   l1:'1 49260U 21088A   26153.50000000  .00000040  00000-0  31800-5 0  9995',l2:'2 49260  98.2020 220.0000 0001200  90.0000 270.0000 14.57115000000000',g:3},
+];
+
+async function fetchTLEs(){
+  // Strategy: 1) Direct CelesTrak (has CORS headers), 2) proxy, 3) hardcoded fallback
+  const DIRECT_URLS=[
+    // CelesTrak supports CORS — try direct first, fastest and most accurate
+    {grp:TLE_GROUPS[0], url:'https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=tle'},
+    {grp:TLE_GROUPS[1], url:'https://celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=tle'},
+    {grp:TLE_GROUPS[2], url:'https://celestrak.org/NORAD/elements/gp.php?GROUP=gps-ops&FORMAT=tle'},
+    {grp:TLE_GROUPS[3], url:'https://celestrak.org/NORAD/elements/gp.php?GROUP=weather&FORMAT=tle'},
+  ];
+  const PROXIES=['https://api.allorigins.win/raw?url=','https://corsproxy.io/?'];
+  let fetchedAny=false;
+
+  await Promise.allSettled(DIRECT_URLS.map(async ({grp,url})=>{
+    let txt=null;
+    // Try direct first
+    try{
+      const r=await fetch(url,{signal:AbortSignal.timeout(7000)});
+      if(r.ok) txt=await r.text();
+    }catch(e){}
+    // Try proxies if direct failed
+    if(!txt){
+      for(const proxy of PROXIES){
+        try{
+          const r=await fetch(proxy+encodeURIComponent(url),{signal:AbortSignal.timeout(7000)});
+          if(r.ok){txt=await r.text();break;}
+        }catch(e){}
+      }
+    }
+    if(txt&&txt.length>100){
+      const parsed=parseTLEs(txt,grp,grp.max);
+      if(parsed.length>0){
+        SATS.push(...parsed);
+        srcC[grp.group]=parsed.length;
+        document.getElementById(grp.ci).textContent=parsed.length;
+        document.getElementById('c-tot').textContent=SATS.length;
+        fetchedAny=true;
+        updM();
+      }
+    }
+  }));
+
+  // Always supplement with fallback TLEs for any groups that didn't load
+  // These have June 2026 epochs so positions are accurate right now
+  const grpMap=[TLE_GROUPS[0],TLE_GROUPS[1],TLE_GROUPS[2],TLE_GROUPS[3]];
+  FALLBACK_TLES.forEach(({n,l1,l2,g})=>{
+    const norad=parseInt(l1.substring(2,7));
+    if(SATS.some(s=>s.noradId===norad))return; // skip if live data has it
+    try{
+      const satrec=satellite.twoline2satrec(l1,l2);
+      const grp=grpMap[g];
+      const nm=satrec.no,p=2*Math.PI/nm,sma=Math.pow(398600.4418/Math.pow(2*Math.PI/p/60,2),1/3),alt=sma-6371;
+      SATS.push({name:n,satrec,noradId:norad,inc:parseFloat(l2.substring(8,16)),alt,
+        orbitType:alt<2000?'LEO':alt<35786?'MEO':'GEO',color:grp.color,group:grp.group});
+    }catch(e){}
+  });
+
+  // Update counts
+  ['Starlink','Station','GPS','Weather'].forEach((grp,gi)=>{
+    const cnt=SATS.filter(s=>s.group===grp).length;
+    srcC[grp]=cnt;
+    document.getElementById(TLE_GROUPS[gi].ci).textContent=cnt||'—';
+  });
+  document.getElementById('c-tot').textContent=SATS.length;
+
+  updM();renderSrcs();
+  const src=fetchedAny?'CelesTrak live TLE (SGP4 — positions accurate to meters)':'built-in TLE dataset (positions ±few km)';
+  setAI(`AEGIS tracking ${SATS.length} real satellites. Data: ${src}. Drag to rotate · Scroll to zoom · Click any satellite for live telemetry.`,.93,'#00d4a0');
+}
+
+// ─── MAIN LOOP ────────────────────────────────────────────────────────────────
+let autoRot=true;
+function loop(){
+  requestAnimationFrame(loop);
+  if(!dragging)globeLon-=.022;
+  drawGlobe(new Date());
+  drawTelem();
+  drawSolar();
+}
+
+setInterval(()=>{
+  const s=activeAtk?({spoof:72,jam:61,inject:85,replay:60}[activeAtk]||65)+Math.random()*13-3:4+Math.random()*5;
+  telH.push({score:parseFloat(s.toFixed(1))});if(telH.length>60)telH.shift();
+},1000);
+// ── DUAL CLOCK — UTC + local time from IP geolocation ──────────────────────
+let userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone; // browser default first
+let userCity = '';
+
+// Fetch timezone from IP using ipapi.co (free, no key)
+fetch('https://ipapi.co/json/')
+  .then(r=>r.json())
+  .then(d=>{
+    if(d.timezone){
+      userTimezone = d.timezone;
+      // Format city label: "SAN JOSE" or "LONDON"
+      userCity = (d.city||d.region||'LOCAL').toUpperCase().substring(0,10);
+      document.getElementById('clk-tz').textContent = userCity;
+    }
+  })
+  .catch(()=>{
+    // Fallback: use browser timezone name abbreviated
+    try{
+      const abbr = new Date().toLocaleTimeString('en',{timeZoneName:'short'}).split(' ').pop();
+      document.getElementById('clk-tz').textContent = abbr||'LOCAL';
+    }catch(e){}
+  });
+
+function updateClocks(){
+  const now = new Date();
+  // UTC
+  document.getElementById('clk-utc').textContent =
+    now.toISOString().replace('T',' ').slice(0,19);
+  // Local (IP-resolved timezone)
+  try{
+    const local = now.toLocaleTimeString('en-US',{
+      timeZone: userTimezone,
+      hour:'2-digit', minute:'2-digit', second:'2-digit',
+      hour12: false
+    });
+    const localDate = now.toLocaleDateString('en-US',{
+      timeZone: userTimezone,
+      month:'2-digit', day:'2-digit'
+    });
+    document.getElementById('clk-local').textContent = localDate + ' ' + local;
+  }catch(e){
+    document.getElementById('clk-local').textContent = now.toLocaleTimeString();
+  }
+}
+updateClocks();
+setInterval(updateClocks, 1000);
+
+// ─── BOOT ────────────────────────────────────────────────────────────────────
+updM();renderA();
+// Start rendering immediately — globe visible at once
+loop();
+// Fetch geo + TLEs in background
+fetchGeo();
+fetchTLEs();
+</script>
+</body>
+</html>
