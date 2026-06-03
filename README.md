@@ -1,32 +1,9 @@
 # ⚔️ AEGIS — Orbital Cyber Threat Intelligence Platform
 
 > First open-source satellite cyber threat IDS — tracks 170+ live satellites using the same SGP4 orbital algorithm as NORAD, detects GPS spoofing, signal jamming & command injection via Isolation Forest AI. Simulates the exact attack chain that took down Viasat in 2022.
-
-🔴 **[Live Demo →](https://aegis-orbital.vercel.app)**
-
 ---
 
 ## Deploy to Vercel (30 seconds, free)
-
-### Step 1 — Push to GitHub
-1. Go to [github.com/new](https://github.com/new)
-2. Name your repo `aegis-orbital` → set to **Public**
-3. Click **"uploading an existing file"**
-4. Drag and drop all 3 files:
-   - `index.html`
-   - `vercel.json`
-   - `README.md`
-5. Click **Commit changes**
-
-### Step 2 — Deploy on Vercel
-1. Go to [vercel.com](https://vercel.com) → sign in with GitHub
-2. Click **New Project** → select `aegis-orbital`
-3. Click **Deploy** — no settings to change
-4. Done. Live URL in ~20 seconds: `https://aegis-orbital.vercel.app`
-
-> Every time you push a new commit to GitHub, Vercel auto-redeploys instantly.
-
----
 
 ## What Is AEGIS?
 
