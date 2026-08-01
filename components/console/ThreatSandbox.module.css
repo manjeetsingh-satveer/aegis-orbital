@@ -1,0 +1,171 @@
+.section {
+  border-top: 1px solid var(--border1);
+}
+
+.header {
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-family: var(--font-code);
+  font-size: 9px;
+  font-weight: 400;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.status {
+  font-family: var(--font-code);
+  font-size: 9px;
+  color: var(--text3);
+  letter-spacing: 1px;
+}
+
+.grid {
+  padding: 6px 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+
+.button,
+.buttonActive {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 4px;
+  border-radius: 4px;
+  border: 1px solid var(--border1);
+  font-family: var(--font-code);
+  font-size: 8px;
+  text-align: center;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+  /* 44px minimum touch target. */
+  min-height: 56px;
+}
+
+.button {
+  color: var(--text3);
+  background: transparent;
+}
+
+.button:hover {
+  border-color: var(--text2);
+  color: var(--text1);
+  background: var(--bg2);
+}
+
+.buttonActive {
+  background: rgba(255, 68, 68, 0.08);
+}
+
+.glyph {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.buttonLabel {
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.severity {
+  font-size: 7px;
+  letter-spacing: 1px;
+}
+
+.phishButton,
+.phishButtonActive {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 8px;
+  border-radius: 4px;
+  font-family: var(--font-code);
+  font-size: 9px;
+  min-height: 44px;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.phishButton {
+  border: 1px solid rgba(176, 64, 255, 0.45);
+  color: #9030dd;
+  background: transparent;
+}
+
+.phishButton:hover {
+  border-color: var(--violet);
+  color: var(--violet);
+  background: rgba(176, 64, 255, 0.08);
+}
+
+.phishButtonActive {
+  border: 1px solid var(--violet);
+  color: var(--violet);
+  background: rgba(176, 64, 255, 0.12);
+}
+
+.resetButton {
+  grid-column: 1 / -1;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 68, 68, 0.15);
+  color: rgba(255, 68, 68, 0.5);
+  font-family: var(--font-code);
+  font-size: 9px;
+  min-height: 40px;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.resetButton:hover {
+  color: var(--red);
+  border-color: var(--red);
+  background: rgba(255, 68, 68, 0.08);
+}
+
+.bars {
+  padding: 4px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-code);
+  font-size: 9px;
+}
+
+.barLabel {
+  min-width: 104px;
+}
+
+.barTrack {
+  flex: 1;
+  height: 2px;
+  background: var(--border1);
+  border-radius: 1px;
+}
+
+.barFill {
+  height: 2px;
+  border-radius: 1px;
+  transition: width 0.6s;
+}
+
+.barCount {
+  min-width: 14px;
+  text-align: right;
+  color: var(--text1);
+  font-variant-numeric: tabular-nums;
+}

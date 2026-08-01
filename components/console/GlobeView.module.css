@@ -1,0 +1,253 @@
+.wrapper {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg0);
+  min-height: 0;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  /* Stop the browser hijacking drags for scrolling/zooming so the globe can
+     handle pointer gestures itself. */
+  touch-action: none;
+}
+
+.canvas:active {
+  cursor: grabbing;
+}
+
+/* ── Overlays ─────────────────────────────────────────────────────────────── */
+
+.counts {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(2, 8, 20, 0.9);
+  border: 1px solid var(--border1);
+  border-radius: 6px;
+  padding: 10px 14px;
+  pointer-events: none;
+}
+
+.countRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  font-family: var(--font-code);
+  font-size: 9px;
+  margin-bottom: 3px;
+}
+
+.countKey {
+  color: var(--text3);
+}
+
+.countValue {
+  color: var(--text1);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.countDivider {
+  height: 1px;
+  background: var(--border1);
+  margin: 5px 0;
+}
+
+.countTotalKey {
+  color: var(--green);
+}
+
+.countTotalValue {
+  color: var(--green);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.legend {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  max-width: calc(100% - 24px);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(2, 8, 20, 0.85);
+  border: 1px solid var(--border1);
+  border-radius: 3px;
+  padding: 3px 8px;
+  font-family: var(--font-code);
+  font-size: 8px;
+  color: var(--text2);
+}
+
+.legendDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legendToggle {
+  background: rgba(2, 8, 20, 0.85);
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  padding: 3px 8px;
+  font-family: var(--font-code);
+  font-size: 8px;
+  color: var(--green);
+  /* Comfortable tap target on touch devices. */
+  min-height: 28px;
+}
+
+.legendToggle:hover {
+  border-color: var(--green);
+}
+
+/* ── Satellite detail card ────────────────────────────────────────────────── */
+
+.detail {
+  position: absolute;
+  bottom: 52px;
+  left: 12px;
+  width: 250px;
+  max-width: calc(100% - 24px);
+  max-height: calc(100% - 80px);
+  overflow-y: auto;
+  background: rgba(2, 8, 20, 0.97);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.detailHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.detailName {
+  font-family: var(--font-code);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green);
+  letter-spacing: 1px;
+}
+
+.detailClose {
+  color: var(--text3);
+  font-size: 14px;
+  line-height: 1;
+  padding: 4px;
+}
+
+.detailClose:hover {
+  color: var(--text1);
+}
+
+.detailList {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--font-code);
+  font-size: 9px;
+}
+
+.detailKey {
+  color: var(--text3);
+}
+
+.detailValue {
+  color: var(--text1);
+  font-variant-numeric: tabular-nums;
+}
+
+.detailDivider {
+  height: 1px;
+  background: var(--border1);
+  margin: 8px 0;
+}
+
+.detailSectionLabel {
+  font-family: var(--font-code);
+  font-size: 8px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+}
+
+/* Simulated data is labelled as such rather than presented as measurement. */
+.detailNote {
+  display: block;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 8px;
+  color: var(--text3);
+  opacity: 0.75;
+  margin-top: 2px;
+}
+
+.detailScore {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.detailScoreValue {
+  font-family: var(--font-code);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.detailScoreBar {
+  flex: 1;
+  height: 3px;
+  background: var(--border1);
+  border-radius: 2px;
+}
+
+.detailScoreFill {
+  height: 3px;
+  border-radius: 2px;
+  transition: width 0.6s, background 0.3s;
+}
+
+@media (max-width: 560px) {
+  .counts {
+    top: 8px;
+    right: 8px;
+    padding: 8px 10px;
+  }
+
+  .countRow {
+    gap: 12px;
+    font-size: 8px;
+  }
+
+  .detail {
+    left: 8px;
+    right: 8px;
+    width: auto;
+  }
+}

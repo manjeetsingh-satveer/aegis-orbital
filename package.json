@@ -1,0 +1,47 @@
+{
+  "name": "aegis-orbital",
+  "version": "3.0.0",
+  "private": true,
+  "description": "AEGIS — Orbital Cyber Threat Intelligence Platform",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "evaluate": "tsx scripts/evaluate.mts",
+    "refresh:fallback": "tsx scripts/refresh-fallback.mts",
+    "verify": "npm run typecheck && npm run lint && npm run test"
+  },
+  "dependencies": {
+    "next": "^15.5.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "satellite.js": "^5.0.0",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.6",
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@types/topojson-client": "^3.1.5",
+    "@types/topojson-specification": "^1.0.5",
+    "@vitest/coverage-v8": "^2.1.8",
+    "eslint": "^9.17.0",
+    "eslint-config-next": "^15.5.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

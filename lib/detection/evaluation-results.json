@@ -1,0 +1,38 @@
+{
+  "generatedAt": "2026-07-30T04:57:23.803Z",
+  "config": {
+    "numTrees": 128,
+    "sampleSize": 256,
+    "trainingSamples": 4000,
+    "testNominalSamples": 4000,
+    "testSamplesPerAttack": 800,
+    "targetSpecificity": 0.99,
+    "trainSeed": 42,
+    "testSeed": 1337
+  },
+  "threshold": 0.570689743738317,
+  "overall": {
+    "truePositives": 3488,
+    "falsePositives": 49,
+    "trueNegatives": 3951,
+    "falseNegatives": 512,
+    "accuracy": 0.929875,
+    "precision": 0.9861464517953068,
+    "recall": 0.872,
+    "f1": 0.9255672018044314,
+    "specificity": 0.98775,
+    "falsePositiveRate": 0.01225
+  },
+  "rocAuc": 0.9948435625,
+  "recallByAttack": {
+    "spoof": 0.99625,
+    "jam": 1,
+    "inject": 1,
+    "replay": 1,
+    "phish": 0.36375
+  },
+  "bestAchievableF1": {
+    "threshold": 0.5264372555069259,
+    "f1": 0.9675767918088737
+  }
+}

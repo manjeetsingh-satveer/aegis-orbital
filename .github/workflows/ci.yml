@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Typecheck · Lint · Test · Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
+      # The detector's published accuracy must match a real run. If the
+      # evaluation output drifts from what is committed, the numbers in the UI
+      # no longer correspond to the model and CI fails.
+      - name: Verify detector evaluation is current
+        run: |
+          npm run evaluate
+          if ! git diff --quiet --ignore-matching-lines='"generatedAt"' -- lib/detection/evaluation-results.json; then
+            echo "::error::evaluation-results.json is stale. Run 'npm run evaluate' and commit the result."
+            git --no-pager diff -- lib/detection/evaluation-results.json
+            exit 1
+          fi
+
+      - name: Build
+        run: npm run build
+        env:
+          # Never let the build reach CelesTrak from CI; the bundled snapshot
+          # covers it and keeps the build hermetic.
+          NEXT_PUBLIC_SITE_URL: https://aegis-orbital.vercel.app

@@ -1,0 +1,272 @@
+.app {
+  display: grid;
+  grid-template-rows: var(--header-height) 1fr;
+  height: 100vh;
+  /* Fall back gracefully, then use the dynamic viewport unit so mobile browser
+     chrome does not crop the layout. */
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+  background: rgba(2, 9, 18, 0.97);
+  border-bottom: 1px solid var(--border1);
+  z-index: 300;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.logoText {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: #fff;
+}
+
+.logoText em {
+  color: var(--green);
+  font-style: normal;
+}
+
+.logoVersion {
+  font-family: var(--font-code);
+  font-size: 9px;
+  color: var(--text3);
+  letter-spacing: 1px;
+}
+
+.logoTagline {
+  font-family: var(--font-code);
+  font-size: 8px;
+  color: var(--text3);
+  letter-spacing: 2px;
+  border-left: 1px solid var(--border2);
+  padding-left: 8px;
+}
+
+.tabs {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.tabList {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabList::-webkit-scrollbar {
+  display: none;
+}
+
+.tab,
+.tabActive {
+  font-family: var(--font-code);
+  font-size: 9px;
+  padding: 6px 14px;
+  border-bottom: 2px solid transparent;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.tab {
+  color: var(--text3);
+}
+
+.tab:hover {
+  color: var(--text2);
+}
+
+.tabActive {
+  color: var(--green);
+  border-bottom-color: var(--green);
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-code);
+  font-size: 9px;
+  padding: 3px 10px;
+  border-radius: 3px;
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  background: var(--bg2);
+  white-space: nowrap;
+}
+
+.pillDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+}
+
+.badge,
+.badgeWarn,
+.badgeCritical {
+  font-family: var(--font-code);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 3px;
+  letter-spacing: 1.5px;
+  white-space: nowrap;
+}
+
+.badge {
+  border: 1px solid var(--green);
+  background: rgba(0, 212, 160, 0.08);
+  color: var(--green);
+}
+
+.badgeWarn {
+  border: 1px solid var(--amber);
+  background: rgba(245, 166, 35, 0.1);
+  color: var(--amber);
+}
+
+.badgeCritical {
+  border: 1px solid var(--red);
+  background: rgba(255, 68, 68, 0.1);
+  color: var(--red);
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.clock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.clockRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.clockLabel {
+  font-family: var(--font-code);
+  font-size: 8px;
+  color: var(--text3);
+  letter-spacing: 1px;
+}
+
+.clockValue {
+  font-family: var(--font-code);
+  font-size: 10px;
+  color: var(--text1);
+  font-variant-numeric: tabular-nums;
+}
+
+.clockValueDim {
+  font-family: var(--font-code);
+  font-size: 10px;
+  color: var(--text2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Body ─────────────────────────────────────────────────────────────────── */
+
+.body {
+  display: grid;
+  grid-template-columns: 1fr var(--panel-width);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg1);
+  border-left: 1px solid var(--border1);
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+}
+
+/*
+ * Responsive layout.
+ *
+ * The legacy build had a single fixed `1fr 370px` grid with overflow:hidden and
+ * no breakpoints, so on a phone the 370px panel consumed most of the screen and
+ * the globe was unusable. Below 900px the layout stacks: globe on top, panel
+ * beneath, each scrollable.
+ */
+@media (max-width: 900px) {
+  .app {
+    grid-template-rows: auto 1fr;
+  }
+
+  .header {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 12px;
+  }
+
+  .logoTagline {
+    display: none;
+  }
+
+  .tabs {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: flex-start;
+  }
+
+  .body {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(280px, 45vh) 1fr;
+  }
+
+  .panel {
+    border-left: none;
+    border-top: 1px solid var(--border1);
+  }
+}
+
+@media (max-width: 560px) {
+  .pill,
+  .logoVersion {
+    display: none;
+  }
+
+  .clockRow:last-child {
+    display: none;
+  }
+}
