@@ -14,15 +14,17 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  NEXT_TELEMETRY_DISABLED: '1'
+
 jobs:
   verify:
-    name: Typecheck · Lint · Test · Build
+    name: Typecheck · Lint · Unit
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -37,24 +39,95 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Test
-        run: npm run test
+      - name: Unit tests with coverage thresholds
+        run: npm run test:coverage
 
-      # The detector's published accuracy must match a real run. If the
-      # evaluation output drifts from what is committed, the numbers in the UI
-      # no longer correspond to the model and CI fails.
-      - name: Verify detector evaluation is current
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+
+  detector:
+    name: Detector evaluation is reproducible
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # The accuracy figure shown in the UI is read from
+      # lib/detection/evaluation-results.json. If a change to the detector or
+      # the telemetry model moves the numbers, the committed file must move with
+      # them — otherwise the product would display a figure no run produced.
+      - name: Regenerate and compare
         run: |
+          cp lib/detection/evaluation-results.json /tmp/committed.json
           npm run evaluate
-          if ! git diff --quiet --ignore-matching-lines='"generatedAt"' -- lib/detection/evaluation-results.json; then
+          if ! diff <(jq 'del(.generatedAt)' /tmp/committed.json) \
+                    <(jq 'del(.generatedAt)' lib/detection/evaluation-results.json) > /dev/null; then
             echo "::error::evaluation-results.json is stale. Run 'npm run evaluate' and commit the result."
-            git --no-pager diff -- lib/detection/evaluation-results.json
+            diff <(jq 'del(.generatedAt)' /tmp/committed.json) \
+                 <(jq 'del(.generatedAt)' lib/detection/evaluation-results.json) || true
             exit 1
           fi
+          echo "Detector output matches the committed evaluation."
+
+  e2e:
+    name: Build · End-to-end
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
 
       - name: Build
         run: npm run build
-        env:
-          # Never let the build reach CelesTrak from CI; the bundled snapshot
-          # covers it and keeps the build hermetic.
-          NEXT_PUBLIC_SITE_URL: https://aegis-orbital.vercel.app
+
+      # E2E runs against the production build on purpose: dev mode re-evaluates
+      # modules per request, which hides real behaviour — the API rate limiter
+      # appears inert under `next dev`, and a broken CSP only fails in a built
+      # app. Both were caught this way.
+      - name: End-to-end tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - name: Fail on known advisories
+        run: npm audit --audit-level=high

@@ -30,6 +30,7 @@ export function AlertFeed({ alerts }: AlertFeedProps): React.ReactElement {
         {alerts.map((alert) => (
           <li
             key={alert.id}
+            data-testid="alert-item"
             className={alert.severity === 'CRITICAL' ? styles.itemCritical : styles.itemWarning}
             style={{ borderLeftColor: ATTACK_COLORS[alert.kind] }}
           >

@@ -32,7 +32,8 @@ export function ThreatSandbox(props: ThreatSandboxProps): React.ReactElement | n
     <section className={styles.section} id="sandbox" aria-label="Threat simulation sandbox">
       <header className={styles.header}>
         <h2 className={styles.title}>Threat Sandbox</h2>
-        <span className={styles.status}>
+        {/* Stable hook for E2E: CSS module class names are hashed per build. */}
+        <span className={styles.status} data-testid="sandbox-status">
           {isPhishing
             ? `PHISH ${(props.phishStage ?? 0) + 1}/${PHISH_STAGES.length}`
             : props.activeAttack !== null
@@ -102,7 +103,9 @@ export function ThreatSandbox(props: ThreatSandboxProps): React.ReactElement | n
                   }}
                 />
               </div>
-              <span className={styles.barCount}>{count}</span>
+              <span className={styles.barCount} data-testid="attack-count">
+                {count}
+              </span>
             </div>
           )
         })}

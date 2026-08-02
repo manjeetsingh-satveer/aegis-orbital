@@ -4,9 +4,9 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
 
-  // Fail the build on type or lint errors rather than shipping them.
+  // Fail the build on type errors rather than shipping them. Linting is a
+  // separate CI step; Next 16 no longer accepts an `eslint` key here.
   typescript: { ignoreBuildErrors: false },
-  eslint: { ignoreDuringBuilds: false },
 
   async headers() {
     return [

@@ -32,8 +32,17 @@ const LABEL_MODE_TEXT: Readonly<Record<LabelMode, string>> = {
 export function GlobeView(props: GlobeViewProps): React.ReactElement {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rendererRef = useRef<GlobeRenderer | null>(null)
+
+  /*
+   * The renderer is constructed once, so it captures whatever `onSelect` was
+   * current at mount. Keeping the latest callback in a ref lets selection
+   * events reach the current handler without tearing down the renderer — but
+   * the ref must be written in an effect, never during render.
+   */
   const onSelectRef = useRef(props.onSelect)
-  onSelectRef.current = props.onSelect
+  useEffect(() => {
+    onSelectRef.current = props.onSelect
+  }, [props.onSelect])
 
   /**
    * The renderer is constructed once and driven imperatively. Satellite

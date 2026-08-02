@@ -14,6 +14,9 @@ import { SATELLITE_GROUPS, type SatelliteGroup, type TleRecord } from './types'
 
 const CELESTRAK_ORIGIN = 'https://celestrak.org'
 
+/** CelesTrak publishes fresh elements every few hours. */
+const UPSTREAM_REVALIDATE_SECONDS = 3600
+
 /**
  * Allowlist mapping our group names to CelesTrak's. User input never reaches
  * the outbound URL: an unrecognised group is rejected before any fetch, which
@@ -113,6 +116,15 @@ export async function fetchGroup(group: SatelliteGroup, options: FetchOptions = 
         'User-Agent': 'AEGIS-Orbital/3.0 (+https://github.com/manjeetsingh-satveer/aegis-orbital)',
         Accept: 'text/plain',
       },
+      /*
+       * Cache the upstream call rather than the route response.
+       *
+       * Caching the whole route made its handler static, so the rate limiter
+       * inside it never executed. Caching here instead keeps CelesTrak load at
+       * one request per group per hour — the protection that actually matters —
+       * while leaving the route dynamic so per-request controls still run.
+       */
+      next: { revalidate: UPSTREAM_REVALIDATE_SECONDS, tags: [`celestrak:${group}`] },
     })
   } catch (error) {
     throw new CelestrakError(`network failure fetching group "${group}"`, error)

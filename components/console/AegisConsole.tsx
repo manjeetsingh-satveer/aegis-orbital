@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from 'react'
 import { createRng } from '@/lib/detection/random'
 import {
   generateAttack,
@@ -18,6 +18,7 @@ import {
   simulationReducer,
   threatBand,
 } from '@/lib/simulation/reducer'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { AlertFeed } from './AlertFeed'
 import { GlobeView } from './GlobeView'
 import { MetricsPanel } from './MetricsPanel'
@@ -172,19 +173,36 @@ export function AegisConsole(): React.ReactElement {
       />
 
       <div className={styles.body}>
-        <GlobeView
-          satellites={satellites}
-          landRings={landRings}
-          threatIds={threatIdSet}
-          selectedId={state.selectedSatelliteId}
-          selectedSatellite={selectedSatellite}
-          liveSample={liveSample}
-          labelMode={labelMode}
-          onLabelModeChange={setLabelMode}
-          onSelect={handleSelect}
-          counts={counts}
-          status={status}
-        />
+        {/*
+          A renderer crash is contained to the globe: the panel, alert feed and
+          sandbox stay usable rather than the whole console going blank.
+        */}
+        <ErrorBoundary
+          label="globe renderer"
+          fallback={
+            <div className={styles.globeFallback} role="alert">
+              <p className={styles.globeFallbackTitle}>Globe unavailable</p>
+              <p className={styles.globeFallbackBody}>
+                The orbital renderer could not start in this browser. Threat simulation and the
+                alert feed remain fully functional.
+              </p>
+            </div>
+          }
+        >
+          <GlobeView
+            satellites={satellites}
+            landRings={landRings}
+            threatIds={threatIdSet}
+            selectedId={state.selectedSatelliteId}
+            selectedSatellite={selectedSatellite}
+            liveSample={liveSample}
+            labelMode={labelMode}
+            onLabelModeChange={setLabelMode}
+            onSelect={handleSelect}
+            counts={counts}
+            status={status}
+          />
+        </ErrorBoundary>
 
         <aside className={styles.panel} aria-label="Threat intelligence panel">
           <MetricsPanel
@@ -284,6 +302,22 @@ function Header({ satelliteCount, band, activeAttack, tab, onTabChange }: Header
   )
 }
 
+/** Ticks once per second; the returned unsubscribe stops the timer. */
+function subscribeToSecond(onChange: () => void): () => void {
+  const interval = window.setInterval(onChange, 1000)
+  return () => window.clearInterval(interval)
+}
+
+/** Whole seconds since the epoch — a primitive, so repeated calls compare equal. */
+function getSecondSnapshot(): number {
+  return Math.floor(Date.now() / 1000)
+}
+
+/** Zero marks "no clock yet", which the server and first client render share. */
+function getServerSecondSnapshot(): number {
+  return 0
+}
+
 function ShieldIcon(): React.ReactElement {
   return (
     <svg width="26" height="26" viewBox="0 0 28 28" fill="none" aria-hidden="true">
@@ -308,13 +342,14 @@ function ShieldIcon(): React.ReactElement {
  * request — and the privacy cost of it — is gone.
  */
 function Clock(): React.ReactElement {
-  const [now, setNow] = useState<Date | null>(null)
-
-  useEffect(() => {
-    setNow(new Date())
-    const interval = window.setInterval(() => setNow(new Date()), 1000)
-    return () => window.clearInterval(interval)
-  }, [])
+  /*
+   * useSyncExternalStore rather than setState-in-an-effect: the snapshot is a
+   * whole-second epoch value, so it is stable within a tick (no render loop),
+   * and getServerSnapshot returns 0 so the server renders a placeholder and
+   * hydration cannot mismatch on a value that changes every second.
+   */
+  const seconds = useSyncExternalStore(subscribeToSecond, getSecondSnapshot, getServerSecondSnapshot)
+  const now = seconds === 0 ? null : new Date(seconds * 1000)
 
   const timezone = useMemo(() => {
     try {

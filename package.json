@@ -16,12 +16,14 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "evaluate": "tsx scripts/evaluate.mts",
     "refresh:fallback": "tsx scripts/refresh-fallback.mts",
     "verify": "npm run typecheck && npm run lint && npm run test"
   },
   "dependencies": {
-    "next": "^15.5.0",
+    "next": "^16.2.12",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "satellite.js": "^5.0.0",
@@ -29,19 +31,31 @@
     "world-atlas": "^2.0.2",
     "zod": "^3.24.0"
   },
+  "//overrides": [
+    "Next pins postcss 8.4.31 and sharp 0.34.5, both of which carry published",
+    "advisories (GHSA-qx2v-qp2m-jg93, GHSA-6g55-p6wh-862q, GHSA-r28c-9q8g-f849,",
+    "GHSA-f88m-g3jw-g9cj). npm's suggested remedy is downgrading Next to 9.3.3,",
+    "which is not a remedy. These pin the patched releases instead; both are",
+    "API-compatible at the versions used, and sharp is inert here because the",
+    "app does not use next/image."
+  ],
+  "overrides": {
+    "postcss": "^8.5.25",
+    "sharp": "^0.35.0"
+  },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.6",
+    "@playwright/test": "^1.62.1",
     "@types/geojson": "^7946.0.16",
     "@types/node": "^22.10.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@types/topojson-client": "^3.1.5",
     "@types/topojson-specification": "^1.0.5",
-    "@vitest/coverage-v8": "^2.1.8",
+    "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^9.17.0",
-    "eslint-config-next": "^15.5.0",
+    "eslint-config-next": "^16.2.12",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "vitest": "^4.1.10"
   }
 }

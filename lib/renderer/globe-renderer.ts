@@ -2,6 +2,14 @@ import { propagateToGeodetic } from '@/lib/orbital/propagate'
 import type { GeodeticPosition, TrackedSatellite } from '@/lib/orbital/types'
 import { GROUP_COLORS, PALETTE } from '@/lib/theme'
 import { interpolatePosition, project, type Viewport } from './projection'
+import {
+  LABEL_HEIGHT,
+  LABEL_PADDING,
+  MAX_SMART_LABELS,
+  selectLabels,
+  type LabelCandidate,
+  type PlacedLabel,
+} from './labels'
 
 export type LabelMode = 'smart' | 'all' | 'none'
 
@@ -35,36 +43,6 @@ const AUTO_ROTATE_DEG_PER_SEC = 1.4
 
 /** Auto-rotation pauses this long after the user interacts. */
 const AUTO_ROTATE_RESUME_MS = 4000
-
-/** Label geometry, shared between placement and drawing. */
-const LABEL_HEIGHT = 11
-const LABEL_PADDING = 3
-
-/**
- * Cap on labels in smart mode. Collision rejection alone still leaves a busy
- * view when a hundred satellites face the camera.
- */
-const MAX_SMART_LABELS = 16
-
-interface LabelCandidate {
-  readonly name: string
-  readonly point: { x: number; y: number; z: number }
-  readonly index: number
-  readonly color: string
-  readonly isThreatened: boolean
-  readonly isSelected: boolean
-  readonly priority: number
-}
-
-/** Shortens a satellite name to fit a label pill. */
-function formatLabel(name: string): string {
-  const shortened = name
-    .replace('STARLINK-', 'SL-')
-    .replace(' (ZARYA)', '')
-    .replace(' (TIANHE)', '')
-    .replace(/\s*\(.*\)$/, '')
-  return shortened.length > 14 ? `${shortened.slice(0, 13)}…` : shortened
-}
 
 const CITY_LIGHTS: readonly (readonly [number, number])[] = [
   [40.7, -74], [51.5, -0.1], [48.8, 2.3], [35.7, 139.7], [31.2, 121.5],
@@ -695,6 +673,7 @@ export class GlobeRenderer {
 
       if (this.#shouldLabel(satellite, isThreatened, isSelected) && point.z > 0.2) {
         labelCandidates.push({
+          id: satellite.id,
           name: satellite.name,
           point: { x: point.x, y: point.y, z: point.z },
           index: i,
@@ -712,63 +691,24 @@ export class GlobeRenderer {
     return visibleCount
   }
 
-  /**
-   * Greedy label placement with collision rejection.
-   *
-   * The legacy renderer drew every eligible label unconditionally, so on a
-   * densely populated view the centre of the globe became an unreadable stack
-   * of overlapping pills. Candidates are sorted by priority (then by depth, so
-   * nearer satellites win ties) and a label is skipped when its box would
-   * overlap one already placed.
-   */
+  /** Delegates placement to the tested pure implementation, then draws. */
   #placeLabels(candidates: LabelCandidate[]): void {
     if (candidates.length === 0) return
 
-    candidates.sort((a, b) => a.priority - b.priority || b.point.z - a.point.z)
-
     const ctx = this.#ctx
-    const placed: { x: number; y: number; width: number; height: number }[] = []
-    const limit = this.#labelMode === 'all' ? candidates.length : MAX_SMART_LABELS
-
-    for (const candidate of candidates) {
-      if (placed.length >= limit) break
-
-      const label = formatLabel(candidate.name)
-      ctx.font =
-        candidate.isThreatened || candidate.isSelected
-          ? 'bold 9px "JetBrains Mono", monospace'
-          : '9px "JetBrains Mono", monospace'
-
-      const textWidth = ctx.measureText(label).width
-      const box = this.#labelBox(candidate, textWidth)
-
-      const collides = placed.some(
-        (other) =>
-          box.x < other.x + other.width &&
-          box.x + box.width > other.x &&
-          box.y < other.y + other.height &&
-          box.y + box.height > other.y,
-      )
-      // Threats are important enough to draw over a neighbour.
-      if (collides && !candidate.isThreatened && !candidate.isSelected) continue
-
-      placed.push(box)
-      this.#drawLabel(label, candidate, box)
-    }
-  }
-
-  #labelBox(
-    candidate: LabelCandidate,
-    textWidth: number,
-  ): { x: number; y: number; width: number; height: number } {
     const { centerX, centerY } = this.#viewport
-    const dx = candidate.point.x - centerX
-    const dy = candidate.point.y - centerY
-    const distance = Math.hypot(dx, dy) || 1
-    const x = candidate.point.x + (dx / distance) * 14
-    const y = candidate.point.y + (dy / distance) * 14 + (candidate.index % 2 === 0 ? -8 : 8)
 
-    return { x: x - LABEL_PADDING, y: y - LABEL_HEIGHT, width: textWidth + LABEL_PADDING * 2 + 1, height: LABEL_HEIGHT + 2 }
+    const measureText = (text: string, bold: boolean): number => {
+      ctx.font = bold
+        ? 'bold 9px "JetBrains Mono", monospace'
+        : '9px "JetBrains Mono", monospace'
+      return ctx.measureText(text).width
+    }
+
+    const limit = this.#labelMode === 'all' ? candidates.length : MAX_SMART_LABELS
+    const placed = selectLabels(candidates, measureText, { x: centerX, y: centerY }, limit)
+
+    for (const label of placed) this.#drawLabel(label)
   }
 
   #shouldLabel(satellite: TrackedSatellite, isThreatened: boolean, isSelected: boolean): boolean {
@@ -779,16 +719,16 @@ export class GlobeRenderer {
     return satellite.group === 'stations' || satellite.group === 'gps' || satellite.group === 'weather'
   }
 
-  #drawLabel(
-    label: string,
-    candidate: LabelCandidate,
-    box: { x: number; y: number; width: number; height: number },
-  ): void {
+  #drawLabel(label: PlacedLabel): void {
     const ctx = this.#ctx
-    const { point, color, isThreatened, isSelected } = candidate
+    const { point, color, isThreatened, isSelected, box, text } = label
 
     const labelColor = isThreatened ? '#ff5555' : isSelected ? '#ffffff' : color
     const alpha = Math.min(1, 0.55 + point.z * 0.45)
+
+    ctx.font = isThreatened || isSelected
+      ? 'bold 9px "JetBrains Mono", monospace'
+      : '9px "JetBrains Mono", monospace'
 
     ctx.globalAlpha = alpha * 0.5
     ctx.strokeStyle = labelColor
@@ -810,7 +750,7 @@ export class GlobeRenderer {
     ctx.fillRect(box.x, box.y, 1.5, box.height)
 
     ctx.globalAlpha = alpha
-    ctx.fillText(label, box.x + LABEL_PADDING + 2, box.y + LABEL_HEIGHT)
+    ctx.fillText(text, box.x + LABEL_PADDING + 2, box.y + LABEL_HEIGHT)
     ctx.globalAlpha = 1
   }
 

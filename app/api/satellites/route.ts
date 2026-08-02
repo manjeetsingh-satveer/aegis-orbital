@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { enforceRateLimit } from '@/lib/api/rate-limit-gate'
 import {
   fetchGroup,
   groupLabel,
@@ -18,7 +19,13 @@ import { SATELLITE_GROUPS, type SatelliteGroup } from '@/lib/orbital/types'
  * and no race. The per-group routes remain available as a public API surface.
  */
 
-export const revalidate = 3600
+/*
+ * Dynamic by design. Caching the route itself made it static, which meant the
+ * rate-limit gate below never ran. The expensive dependency — the CelesTrak
+ * fetch — is cached inside lib/orbital/celestrak.ts instead, so upstream still
+ * sees one request per group per hour.
+ */
+export const dynamic = 'force-dynamic'
 
 export interface SatellitesResponse {
   readonly fetchedAt: string
@@ -65,7 +72,10 @@ async function loadGroup(group: SatelliteGroup, now: Date): Promise<{ payload: T
   }
 }
 
-export async function GET(): Promise<NextResponse> {
+export async function GET(request: Request): Promise<NextResponse> {
+  const gate = enforceRateLimit(request)
+  if (gate.rejection !== null) return gate.rejection
+
   const now = new Date()
 
   // Outbound requests run in parallel; these are our own server's calls to a
@@ -94,7 +104,7 @@ export async function GET(): Promise<NextResponse> {
   if (groups.length === 0) {
     return NextResponse.json(
       { error: 'satellite data temporarily unavailable' },
-      { status: 503, headers: { 'Cache-Control': 'no-store' } },
+      { status: 503, headers: { ...gate.headers, 'Cache-Control': 'no-store' } },
     )
   }
 
@@ -106,6 +116,7 @@ export async function GET(): Promise<NextResponse> {
 
   return NextResponse.json(body, {
     headers: {
+      ...gate.headers,
       'Cache-Control':
         degraded.length === 0
           ? 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400'

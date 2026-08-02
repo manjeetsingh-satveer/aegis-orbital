@@ -26,6 +26,61 @@ const EMPTY_COUNTS: Record<SatelliteGroup, number> = {
   weather: 0,
 }
 
+const MAX_ATTEMPTS = 3
+const BASE_BACKOFF_MS = 400
+
+/** 5xx and 429 are worth retrying; 4xx generally is not. */
+function isRetryable(status: number): boolean {
+  return status >= 500 || status === 429
+}
+
+const sleep = (ms: number, signal: AbortSignal): Promise<void> =>
+  new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, ms)
+    signal.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer)
+        reject(new DOMException('aborted', 'AbortError'))
+      },
+      { once: true },
+    )
+  })
+
+/**
+ * Fetch with bounded exponential backoff and jitter.
+ *
+ * Upstream data sources are not always available — CelesTrak rate-limited us
+ * with 403s during development, and a cold serverless instance can fail its
+ * first request. One transient failure should not leave the console empty for
+ * the whole session.
+ */
+async function fetchWithRetry(url: string, signal: AbortSignal): Promise<Response> {
+  let lastError: Error = new Error('request never attempted')
+
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
+    if (attempt > 0) {
+      // Jitter prevents every open tab retrying on the same beat.
+      const delay = BASE_BACKOFF_MS * 2 ** (attempt - 1) * (0.5 + Math.random())
+      await sleep(delay, signal)
+    }
+
+    try {
+      const response = await fetch(url, { signal })
+      if (response.ok) return response
+
+      lastError = new Error(`${url} returned ${response.status}`)
+      if (!isRetryable(response.status)) throw lastError
+    } catch (cause) {
+      // An abort is intentional and must not be retried.
+      if (cause instanceof DOMException && cause.name === 'AbortError') throw cause
+      lastError = cause instanceof Error ? cause : new Error(String(cause))
+    }
+  }
+
+  throw lastError
+}
+
 /**
  * Loads satellite sets from our own API route.
  *
@@ -44,8 +99,7 @@ export function useSatellites(): SatelliteData {
       try {
         // A single combined request: four parallel calls to the per-group route
         // raced Next's incremental cache on a cold start and some returned 500.
-        const response = await fetch('/api/satellites', { signal: controller.signal })
-        if (!response.ok) throw new Error(`satellites endpoint returned ${response.status}`)
+        const response = await fetchWithRetry('/api/satellites', controller.signal)
 
         const body = (await response.json()) as SatellitesResponse
         if (controller.signal.aborted) return

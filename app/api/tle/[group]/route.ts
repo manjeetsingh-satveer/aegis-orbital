@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { enforceRateLimit } from '@/lib/api/rate-limit-gate'
 import {
   CelestrakError,
   fetchGroup,
@@ -23,10 +24,14 @@ import { SATELLITE_GROUPS } from '@/lib/orbital/types'
  * CelesTrak sees one request per group per hour rather than one per visitor.
  */
 
-/** Revalidate hourly; CelesTrak publishes fresh elements every few hours. */
-export const revalidate = 3600
+/*
+ * Dynamic for the same reason as /api/satellites: a cached route handler does
+ * not execute per request, so the rate-limit gate would be inert. The upstream
+ * CelesTrak fetch carries the hourly cache instead.
+ */
+export const dynamic = 'force-dynamic'
 
-/** Only the four known groups exist as routes; anything else 404s at the framework level. */
+/** Only the four known groups exist as routes; anything else 404s. */
 export const dynamicParams = false
 
 export function generateStaticParams(): { group: string }[] {
@@ -34,16 +39,22 @@ export function generateStaticParams(): { group: string }[] {
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ group: string }> },
 ): Promise<NextResponse> {
+  const gate = enforceRateLimit(request)
+  if (gate.rejection !== null) return gate.rejection
+
   const { group } = await context.params
 
   // Defence in depth: dynamicParams=false already rejects unknown groups, but
   // the allowlist check is what guarantees user input never reaches an
   // outbound URL.
   if (!isSatelliteGroup(group)) {
-    return NextResponse.json({ error: 'unknown satellite group' }, { status: 404 })
+    return NextResponse.json(
+      { error: 'unknown satellite group' },
+      { status: 404, headers: gate.headers },
+    )
   }
 
   const now = new Date()
@@ -73,7 +84,7 @@ export async function GET(
     if (records.length === 0) {
       return NextResponse.json(
         { error: 'satellite data temporarily unavailable' },
-        { status: 503, headers: { 'Cache-Control': 'no-store' } },
+        { status: 503, headers: { ...gate.headers, 'Cache-Control': 'no-store' } },
       )
     }
 
@@ -96,12 +107,13 @@ export async function GET(
     )
     return NextResponse.json(
       { error: 'internal validation failure' },
-      { status: 500, headers: { 'Cache-Control': 'no-store' } },
+      { status: 500, headers: { ...gate.headers, 'Cache-Control': 'no-store' } },
     )
   }
 
   return NextResponse.json(validated.data, {
     headers: {
+      ...gate.headers,
       'Cache-Control':
         payload.source === 'live'
           ? 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400'

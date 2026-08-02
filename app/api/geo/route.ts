@@ -62,6 +62,12 @@ function landRings(): Ring[] {
   return rings
 }
 
+/*
+ * Deliberately static and un-rate-limited: this serves bundled, immutable
+ * geometry and makes no upstream call, so there is nothing to amplify against.
+ * Serving it from the static cache is both cheaper and safer than running a
+ * handler per request.
+ */
 export function GET(): NextResponse {
   const rings = landRings()
 
