@@ -68,18 +68,13 @@ jobs:
       # lib/detection/evaluation-results.json. If a change to the detector or
       # the telemetry model moves the numbers, the committed file must move with
       # them — otherwise the product would display a figure no run produced.
-      - name: Regenerate and compare
-        run: |
-          cp lib/detection/evaluation-results.json /tmp/committed.json
-          npm run evaluate
-          if ! diff <(jq 'del(.generatedAt)' /tmp/committed.json) \
-                    <(jq 'del(.generatedAt)' lib/detection/evaluation-results.json) > /dev/null; then
-            echo "::error::evaluation-results.json is stale. Run 'npm run evaluate' and commit the result."
-            diff <(jq 'del(.generatedAt)' /tmp/committed.json) \
-                 <(jq 'del(.generatedAt)' lib/detection/evaluation-results.json) || true
-            exit 1
-          fi
-          echo "Detector output matches the committed evaluation."
+      #
+      # Compared field-by-field with a tolerance rather than as a text diff:
+      # Math.log/sin/cos are implementation-defined in ECMAScript, so a file
+      # generated on Windows need not byte-match a Linux run. See the script for
+      # the full reasoning.
+      - name: Verify committed metrics match a fresh run
+        run: npm run check:evaluation
 
   e2e:
     name: Build · End-to-end

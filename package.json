@@ -19,6 +19,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "evaluate": "tsx scripts/evaluate.mts",
+    "check:evaluation": "tsx scripts/check-evaluation.mts",
     "refresh:fallback": "tsx scripts/refresh-fallback.mts",
     "verify": "npm run typecheck && npm run lint && npm run test"
   },
